@@ -70,6 +70,7 @@ out or close RuneLite), Tree Pings syncs the full set of upcoming dings. Open th
 | Follow-on trees | Yew | Trees that also get dings one or more grow cycles later. |
 | Follow-on cycles | 2 | How many follow-on dings. 2 matches one PC run plus two mobile runs a day. |
 | Sync delay | 5 min | Waits this long after your last patch change before updating the calendar, so a run in progress isn't synced halfway. Logging out or closing RuneLite syncs right away. |
+| Chat messages | on | A chat message when a run is detected, and another when your calendar is updated, naming the next ding. |
 
 ## How it behaves
 

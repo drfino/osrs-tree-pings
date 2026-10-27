@@ -9,6 +9,10 @@ import com.google.gson.JsonObject;
 import com.google.inject.Provides;
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -125,6 +129,11 @@ public class TreePingsPlugin extends Plugin
 		{
 			// Time Tracking saved new patch data. Wait until the run is over before syncing:
 			// every new patch change pushes the sync back again.
+			if (!dirty && config.chatMessages() && scriptUrl() != null)
+			{
+				chat("Tree Pings: saw your patches change. Your calendar updates "
+					+ config.syncDelay() + " min after your last patch, or when you log out.");
+			}
 			dirty = true;
 			schedule(config.syncDelay() * 60L);
 			return;
@@ -254,6 +263,10 @@ public class TreePingsPlugin extends Plugin
 			{
 				lastSentBatches = batchesJson;
 				retrySeconds = 0;
+				if (config.chatMessages())
+				{
+					chat(syncSummary(batches));
+				}
 			}
 			else
 			{
@@ -353,6 +366,22 @@ public class TreePingsPlugin extends Plugin
 			}
 		});
 		return result;
+	}
+
+	private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("h:mm a");
+	private static final DateTimeFormatter DAY_TIME = DateTimeFormatter.ofPattern("EEE h:mm a");
+
+	static String syncSummary(List<Batch> batches)
+	{
+		if (batches.isEmpty())
+		{
+			return "Tree Pings: calendar updated, no trees growing.";
+		}
+		Batch next = batches.get(0);
+		ZonedDateTime when = Instant.ofEpochSecond(next.readyAt).atZone(ZoneId.systemDefault());
+		String at = when.toLocalDate().equals(LocalDate.now()) ? TIME.format(when) : DAY_TIME.format(when);
+		return "Tree Pings: calendar updated, " + batches.size() + (batches.size() == 1 ? " ding" : " dings")
+			+ ". Next: " + next.title + " at " + at + ".";
 	}
 
 	private HttpUrl scriptUrl()

@@ -56,6 +56,17 @@ public interface TreePingsConfig extends Config
 		return false;
 	}
 
+	@ConfigItem(
+		keyName = "chatMessages",
+		name = "Chat messages",
+		description = "Show a chat message when a run is detected and when your calendar is updated",
+		position = 9
+	)
+	default boolean chatMessages()
+	{
+		return true;
+	}
+
 	@Range(min = 1, max = 30)
 	@Units(Units.MINUTES)
 	@ConfigItem(
