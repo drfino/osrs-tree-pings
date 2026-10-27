@@ -56,6 +56,19 @@ public interface TreePingsConfig extends Config
 		return false;
 	}
 
+	@Range(min = 1, max = 30)
+	@Units(Units.MINUTES)
+	@ConfigItem(
+		keyName = "syncDelay",
+		name = "Sync delay",
+		description = "Wait this long after your last patch change before updating the calendar, so a run in progress isn't synced halfway. Logging out or closing RuneLite syncs right away.",
+		position = 8
+	)
+	default int syncDelay()
+	{
+		return 5;
+	}
+
 	@Range(min = 0, max = 120)
 	@Units(Units.MINUTES)
 	@ConfigItem(

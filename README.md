@@ -55,8 +55,8 @@ developer launcher (requires JDK 11 or newer):
 In the plugin's settings, paste the **Apps Script URL** and **Token**, then tick
 **Send test ding**. A console message confirms it, and your phone dings in about 2 minutes.
 
-Do a tree run as usual. About 30 seconds after Time Tracking saves new patch data, Tree
-Pings syncs the full set of upcoming dings. Open the Google Calendar app to see them.
+Do a tree run as usual. Five minutes after your last patch change (or as soon as you log
+out or close RuneLite), Tree Pings syncs the full set of upcoming dings. Open the Google Calendar app to see them.
 
 ## Settings
 
@@ -69,6 +69,7 @@ Pings syncs the full set of upcoming dings. Open the Google Calendar app to see 
 | Group window | 45 min | Same-tree patches finishing within this span share one ding, at the time the last one is ready. 45 covers a run that crosses a 40-minute yew growth tick. |
 | Follow-on trees | Yew | Trees that also get dings one or more grow cycles later. |
 | Follow-on cycles | 2 | How many follow-on dings. 2 matches one PC run plus two mobile runs a day. |
+| Sync delay | 5 min | Waits this long after your last patch change before updating the calendar, so a run in progress isn't synced halfway. Logging out or closing RuneLite syncs right away. |
 
 ## How it behaves
 

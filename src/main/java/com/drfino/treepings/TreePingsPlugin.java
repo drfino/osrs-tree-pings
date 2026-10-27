@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -22,10 +23,13 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
+import net.runelite.api.GameState;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ClientShutdown;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.RuneScapeProfileChanged;
 import net.runelite.client.plugins.Plugin;
@@ -49,7 +53,6 @@ import okhttp3.ResponseBody;
 public class TreePingsPlugin extends Plugin
 {
 	private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-	private static final long DEBOUNCE_SECONDS = 30;
 	private static final long LOOKAHEAD_SECONDS = 13L * 24 * 3600; // script keeps 14 days
 	private static final long MAX_RETRY_SECONDS = 15 * 60;
 
@@ -77,6 +80,8 @@ public class TreePingsPlugin extends Plugin
 	private volatile String lastSentBatches;
 	private volatile long retrySeconds;
 	private volatile boolean warnedBadSetup;
+	/** Time Tracking has changed since the last sync. */
+	private volatile boolean dirty;
 
 	@Provides
 	TreePingsConfig provideConfig(ConfigManager configManager)
@@ -118,8 +123,10 @@ public class TreePingsPlugin extends Plugin
 	{
 		if (TimeTrackingKeys.CONFIG_GROUP.equals(e.getGroup()))
 		{
-			// Time Tracking saved new patch data. Wait for a run to settle before syncing.
-			schedule(DEBOUNCE_SECONDS);
+			// Time Tracking saved new patch data. Wait until the run is over before syncing:
+			// every new patch change pushes the sync back again.
+			dirty = true;
+			schedule(config.syncDelay() * 60L);
 			return;
 		}
 
@@ -144,6 +151,43 @@ public class TreePingsPlugin extends Plugin
 		schedule(2);
 	}
 
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged e)
+	{
+		// Logging out ends the run, so don't wait out the sync delay.
+		if (e.getGameState() == GameState.LOGIN_SCREEN && dirty)
+		{
+			schedule(2);
+		}
+	}
+
+	@Subscribe
+	public void onClientShutdown(ClientShutdown e)
+	{
+		// Closing RuneLite right after a run: send it now, or the dings would be lost.
+		if (!dirty)
+		{
+			return;
+		}
+		synchronized (this)
+		{
+			if (pending != null)
+			{
+				pending.cancel(false);
+				pending = null;
+			}
+		}
+		dirty = false;
+		try
+		{
+			e.waitFor(syncNow());
+		}
+		catch (Exception ex)
+		{
+			log.warn("Tree Pings sync on shutdown failed", ex);
+		}
+	}
+
 	private synchronized void schedule(long delaySeconds)
 	{
 		if (pending != null)
@@ -155,6 +199,7 @@ public class TreePingsPlugin extends Plugin
 
 	private void sync()
 	{
+		dirty = false;
 		try
 		{
 			syncNow();
@@ -165,19 +210,19 @@ public class TreePingsPlugin extends Plugin
 		}
 	}
 
-	private void syncNow()
+	private CompletableFuture<Boolean> syncNow()
 	{
 		HttpUrl url = scriptUrl();
 		if (url == null || config.token().isEmpty())
 		{
-			return;
+			return CompletableFuture.completedFuture(false);
 		}
 
 		String profile = configManager.getRSProfileKey();
 		if (profile == null)
 		{
 			// Not logged in since the client started; nothing new to report.
-			return;
+			return CompletableFuture.completedFuture(true);
 		}
 
 		ConfigSource source = key -> configManager.getConfiguration(TimeTrackingKeys.CONFIG_GROUP, profile, key);
@@ -194,7 +239,7 @@ public class TreePingsPlugin extends Plugin
 		String batchesJson = gson.toJson(batches);
 		if (batchesJson.equals(lastSentBatches))
 		{
-			return;
+			return CompletableFuture.completedFuture(true);
 		}
 
 		Map<String, Object> body = new LinkedHashMap<>();
@@ -203,7 +248,7 @@ public class TreePingsPlugin extends Plugin
 		body.put("batches", batches);
 
 		log.debug("Tree Pings sending {} dings: {}", batches.size(), batches);
-		post(url, gson.toJson(body), ok ->
+		return post(url, gson.toJson(body), ok ->
 		{
 			if (ok)
 			{
@@ -240,8 +285,9 @@ public class TreePingsPlugin extends Plugin
 		void accept(boolean ok);
 	}
 
-	private void post(HttpUrl url, String json, Done done)
+	private CompletableFuture<Boolean> post(HttpUrl url, String json, Done done)
 	{
+		CompletableFuture<Boolean> result = new CompletableFuture<>();
 		Request request = new Request.Builder()
 			.url(url)
 			.post(RequestBody.create(JSON, json))
@@ -255,6 +301,7 @@ public class TreePingsPlugin extends Plugin
 			{
 				log.debug("Tree Pings POST failed", e);
 				done.accept(false);
+				result.complete(false);
 			}
 
 			@Override
@@ -296,13 +343,16 @@ public class TreePingsPlugin extends Plugin
 						}
 					}
 					done.accept(ok);
+					result.complete(ok);
 				}
 				catch (IOException e)
 				{
 					done.accept(false);
+					result.complete(false);
 				}
 			}
 		});
+		return result;
 	}
 
 	private HttpUrl scriptUrl()
