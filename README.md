@@ -11,8 +11,9 @@ Google Apps Script running in your own Google account. The script keeps a privat
 - Private: events live on your own calendar, marked private, and the script only accepts
   requests that carry your token.
 - No login screen left open: once a run is synced, RuneLite can be closed.
-- Mobile replants: for yews (configurable), it also dings one and two grow cycles later,
-  for the runs you do on mobile where RuneLite can't see you replant.
+- No 3 AM dings: anything that finishes overnight waits for one "Morning run" ding.
+- Mobile replants: regular trees (yews, magics, etc.) also get dings one and two grow
+  cycles later, for the runs you do on mobile where RuneLite can't see you replant.
 
 ## Setup
 
@@ -65,20 +66,19 @@ out or close RuneLite), Tree Pings syncs the full set of upcoming dings. Open th
 | Apps Script URL | | Your web app URL, ending in `/exec`. |
 | Token | | Must match the `TOKEN` script property. |
 | Send test ding | off | Tick to create a test event 2 minutes out. Unticks itself. |
-| Only belled patches | off | Only ding for patches with the Time Tracking bell on. |
-| Group window | 45 min | Same-tree patches finishing within this span share one ding, at the time the last one is ready. 45 covers a run that crosses a 40-minute yew growth tick. |
-| Follow-on trees | Yew | Trees that also get dings one or more grow cycles later. |
-| Follow-on cycles | 2 | How many follow-on dings. 2 matches one PC run plus two mobile runs a day. |
-| Sync delay | 5 min | Waits this long after your last patch change before updating the calendar, so a run in progress isn't synced halfway. Logging out or closing RuneLite syncs right away. |
+| Awake from (hour) | 8 | Anything finishing while you sleep goes into one "Morning run" ding at this hour. |
+| Awake until (hour) | 0 (midnight) | Set it equal to "Awake from" for dings around the clock. |
+| Follow-on runs | 2 | Regular-tree runs you do each day that RuneLite can't see, e.g. on mobile. Each gets an "(if replanted)" ding. 2 matches one PC run plus two mobile runs. |
 | Chat messages | on | A chat message when a run is detected, and another when your calendar is updated, naming the next ding. |
+
+**Advanced** (collapsed): Sync delay (5 min, how long after your last patch change it waits before syncing; logging out or closing RuneLite syncs right away), Group window (45 min, patches finishing this close together share a ding), Only belled patches (off).
 
 ## How it behaves
 
 - Every sync replaces all future Tree Pings events, so harvesting or replanting on PC
   never leaves a stale ding.
-- Follow-on dings say "(if replanted)". Farming growth happens on fixed ticks, so if you
-  replant within 40 minutes of a yew ding, the follow-on is exact. Replant later than that
-  and it can be early by up to the delay.
+- Follow-on dings say "(if replanted)" and assume you replant when the previous ding goes
+  off. Replant later than that and the next one can be early by up to the delay.
 - RuneLite only knows what it last saw. If you skip a mobile run, the follow-on still
   fires. The next PC run corrects everything.
 - If Time Tracking doesn't yet know your farming tick offset (fresh install), there's no

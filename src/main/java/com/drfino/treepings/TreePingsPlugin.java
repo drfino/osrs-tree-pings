@@ -13,17 +13,13 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
@@ -237,13 +233,9 @@ public class TreePingsPlugin extends Plugin
 		ConfigSource source = key -> configManager.getConfiguration(TimeTrackingKeys.CONFIG_GROUP, profile, key);
 		List<ReadyPatch> patches = predictor.predictGrowing(source, config.requireBell());
 
-		Set<String> followOn = Arrays.stream(config.followOnProduce().split(","))
-			.map(s -> s.trim().toLowerCase(Locale.ROOT))
-			.filter(s -> !s.isEmpty())
-			.collect(Collectors.toSet());
-
+		Batcher.Awake awake = new Batcher.Awake(ZoneId.systemDefault(), config.awakeFrom(), config.awakeUntil());
 		List<Batch> batches = Batcher.build(patches, Instant.now().getEpochSecond(),
-			config.groupWindow() * 60L, followOn, config.followOnCycles(), LOOKAHEAD_SECONDS);
+			config.groupWindow() * 60L, config.followOnCycles(), LOOKAHEAD_SECONDS, awake);
 
 		String batchesJson = gson.toJson(batches);
 		if (batchesJson.equals(lastSentBatches))

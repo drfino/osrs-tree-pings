@@ -3,6 +3,7 @@ package com.drfino.treepings;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Range;
 import net.runelite.client.config.Units;
 
@@ -10,6 +11,14 @@ import net.runelite.client.config.Units;
 public interface TreePingsConfig extends Config
 {
 	String GROUP = "treepings";
+
+	@ConfigSection(
+		name = "Advanced",
+		description = "Fine-tuning. The defaults work for most players.",
+		position = 100,
+		closedByDefault = true
+	)
+	String advanced = "advanced";
 
 	@ConfigItem(
 		keyName = "scriptUrl",
@@ -45,22 +54,47 @@ public interface TreePingsConfig extends Config
 		return false;
 	}
 
+	@Range(max = 23)
 	@ConfigItem(
-		keyName = "requireBell",
-		name = "Only belled patches",
-		description = "Only ding for patches whose bell is turned on in the Time Tracking panel",
+		keyName = "awakeFrom",
+		name = "Awake from (hour)",
+		description = "Hour you wake up, 0-23. Anything that finishes while you sleep goes into one 'Morning run' ding at this hour.",
 		position = 4
 	)
-	default boolean requireBell()
+	default int awakeFrom()
 	{
-		return false;
+		return 8;
+	}
+
+	@Range(max = 23)
+	@ConfigItem(
+		keyName = "awakeUntil",
+		name = "Awake until (hour)",
+		description = "Hour you go to sleep, 0-23 (0 = midnight). Set it equal to 'Awake from' to get dings around the clock.",
+		position = 5
+	)
+	default int awakeUntil()
+	{
+		return 0;
+	}
+
+	@Range(max = 4)
+	@ConfigItem(
+		keyName = "followOnCycles",
+		name = "Follow-on runs",
+		description = "Regular-tree runs you do each day that RuneLite can't see (e.g. on mobile). Each gets an '(if replanted)' ding one grow cycle after the last.",
+		position = 6
+	)
+	default int followOnCycles()
+	{
+		return 2;
 	}
 
 	@ConfigItem(
 		keyName = "chatMessages",
 		name = "Chat messages",
 		description = "Show a chat message when a run is detected and when your calendar is updated",
-		position = 9
+		position = 7
 	)
 	default boolean chatMessages()
 	{
@@ -73,20 +107,22 @@ public interface TreePingsConfig extends Config
 		keyName = "syncDelay",
 		name = "Sync delay",
 		description = "Wait this long after your last patch change before updating the calendar, so a run in progress isn't synced halfway. Logging out or closing RuneLite syncs right away.",
-		position = 8
+		position = 1,
+		section = advanced
 	)
 	default int syncDelay()
 	{
 		return 5;
 	}
 
-	@Range(min = 0, max = 120)
+	@Range(max = 120)
 	@Units(Units.MINUTES)
 	@ConfigItem(
 		keyName = "groupWindow",
 		name = "Group window",
-		description = "Patches of the same tree that finish within this many minutes share one ding",
-		position = 5
+		description = "Patches finishing within this many minutes of each other share one ding",
+		position = 2,
+		section = advanced
 	)
 	default int groupWindow()
 	{
@@ -94,25 +130,14 @@ public interface TreePingsConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "followOnProduce",
-		name = "Follow-on trees",
-		description = "Comma-separated trees that also get a ding one grow cycle later, for replants done on mobile",
-		position = 6
+		keyName = "requireBell",
+		name = "Only belled patches",
+		description = "Only ding for patches whose bell is turned on in the Time Tracking panel",
+		position = 3,
+		section = advanced
 	)
-	default String followOnProduce()
+	default boolean requireBell()
 	{
-		return "Yew";
-	}
-
-	@Range(min = 0, max = 4)
-	@ConfigItem(
-		keyName = "followOnCycles",
-		name = "Follow-on cycles",
-		description = "How many extra grow cycles to ding for follow-on trees (2 = two mobile runs)",
-		position = 7
-	)
-	default int followOnCycles()
-	{
-		return 2;
+		return false;
 	}
 }
