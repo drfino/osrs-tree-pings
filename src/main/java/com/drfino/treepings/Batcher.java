@@ -255,6 +255,34 @@ final class Batcher
 		return out;
 	}
 
+	/**
+	 * Crops whose finish time has passed, as RuneLite last saw them (e.g. "Yew x7, Calquat x2").
+	 * Patches finished more than two weeks ago are ignored as abandoned.
+	 */
+	static String readyNow(List<ReadyPatch> patches, long unixNow)
+	{
+		List<ReadyPatch> ready = new ArrayList<>();
+		for (ReadyPatch p : patches)
+		{
+			if (p.getReadyAt() <= unixNow && p.getReadyAt() > unixNow - 14L * 86400)
+			{
+				ready.add(p);
+			}
+		}
+		ready.sort(Comparator.comparingLong(ReadyPatch::getReadyAt));
+		Map<String, Integer> counts = new LinkedHashMap<>();
+		for (ReadyPatch p : ready)
+		{
+			counts.merge(p.getProduceName(), 1, Integer::sum);
+		}
+		List<String> out = new ArrayList<>();
+		for (Map.Entry<String, Integer> c : counts.entrySet())
+		{
+			out.add(c.getKey() + (c.getValue() > 1 ? " x" + c.getValue() : ""));
+		}
+		return String.join(", ", out);
+	}
+
 	private static String places(List<Entry> entries)
 	{
 		Set<String> places = new LinkedHashSet<>();

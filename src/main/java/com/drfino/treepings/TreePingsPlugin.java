@@ -82,6 +82,8 @@ public class TreePingsPlugin extends Plugin
 	private volatile boolean warnedBadSetup;
 	/** Time Tracking has changed since the last sync. */
 	private volatile boolean dirty;
+	/** Just logged in: say what's ready even if the calendar doesn't need changing. */
+	private volatile boolean announce;
 
 	@Provides
 	TreePingsConfig provideConfig(ConfigManager configManager)
@@ -115,6 +117,7 @@ public class TreePingsPlugin extends Plugin
 	public void onRuneScapeProfileChanged(RuneScapeProfileChanged e)
 	{
 		// Logged in: sync whatever Time Tracking already knows, even if nothing changes this session.
+		announce = true;
 		schedule(5);
 	}
 
@@ -236,10 +239,16 @@ public class TreePingsPlugin extends Plugin
 		Batcher.Awake awake = new Batcher.Awake(ZoneId.systemDefault(), config.awakeFrom(), config.awakeUntil());
 		List<Batch> batches = Batcher.build(patches, Instant.now().getEpochSecond(),
 			config.groupWindow() * 60L, config.followOnCycles(), LOOKAHEAD_SECONDS, awake);
+		String readyNow = Batcher.readyNow(patches, Instant.now().getEpochSecond());
 
 		String batchesJson = gson.toJson(batches);
 		if (batchesJson.equals(lastSentBatches))
 		{
+			if (announce && config.chatMessages())
+			{
+				chat(syncSummary(readyNow, batches, false));
+			}
+			announce = false;
 			return CompletableFuture.completedFuture(true);
 		}
 
@@ -257,8 +266,9 @@ public class TreePingsPlugin extends Plugin
 				retrySeconds = 0;
 				if (config.chatMessages())
 				{
-					chat(syncSummary(batches));
+					chat(syncSummary(readyNow, batches, true));
 				}
+				announce = false;
 			}
 			else
 			{
@@ -363,17 +373,30 @@ public class TreePingsPlugin extends Plugin
 	private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("h:mm a");
 	private static final DateTimeFormatter DAY_TIME = DateTimeFormatter.ofPattern("EEE h:mm a");
 
-	static String syncSummary(List<Batch> batches)
+	/** e.g. "Tree Pings: calendar updated. Ready now: Yew x7. Next ding: Yew x7 ready (if replanted) at 10:00 PM." */
+	static String syncSummary(String readyNow, List<Batch> batches, boolean updated)
 	{
+		StringBuilder sb = new StringBuilder("Tree Pings: ");
+		if (updated)
+		{
+			sb.append("calendar updated. ");
+		}
+		if (!readyNow.isEmpty())
+		{
+			sb.append("Ready now: ").append(readyNow).append(". ");
+		}
 		if (batches.isEmpty())
 		{
-			return "Tree Pings: calendar updated, no trees growing.";
+			sb.append("No dings scheduled.");
 		}
-		Batch next = batches.get(0);
-		ZonedDateTime when = Instant.ofEpochSecond(next.readyAt).atZone(ZoneId.systemDefault());
-		String at = when.toLocalDate().equals(LocalDate.now()) ? TIME.format(when) : DAY_TIME.format(when);
-		return "Tree Pings: calendar updated, " + batches.size() + (batches.size() == 1 ? " ding" : " dings")
-			+ ". Next: " + next.title + " at " + at + ".";
+		else
+		{
+			Batch next = batches.get(0);
+			ZonedDateTime when = Instant.ofEpochSecond(next.readyAt).atZone(ZoneId.systemDefault());
+			String at = when.toLocalDate().equals(LocalDate.now()) ? TIME.format(when) : DAY_TIME.format(when);
+			sb.append("Next ding: ").append(next.title).append(" at ").append(at).append('.');
+		}
+		return sb.toString();
 	}
 
 	private HttpUrl scriptUrl()
