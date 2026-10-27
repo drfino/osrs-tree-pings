@@ -11,6 +11,9 @@ Google Apps Script running in your own Google account. The script keeps a privat
 - Private: events live on your own calendar, marked private, and the script only accepts
   requests that carry your token.
 - No login screen left open: once a run is synced, RuneLite can be closed.
+- Built around your regular-tree runs: yews (or magics, etc.) decide when you get dinged,
+  about 3 times a day. Fruit trees, calquats and hardwoods don't ding on their own; they're
+  listed on the next tree ding ("Yew x7 ready, also Calquat x2").
 - No 3 AM dings: anything that finishes overnight waits for one "Morning run" ding.
 - Mobile replants: regular trees (yews, magics, etc.) also get dings one and two grow
   cycles later, for the runs you do on mobile where RuneLite can't see you replant.
@@ -75,6 +78,8 @@ out or close RuneLite), Tree Pings syncs the full set of upcoming dings. Open th
 
 ## How it behaves
 
+- If no regular trees are growing (say you only plant fruit trees), every crop gets its own
+  ding instead.
 - Every sync replaces all future Tree Pings events, so harvesting or replanting on PC
   never leaves a stale ding.
 - Follow-on dings say "(if replanted)" and assume you replant when the previous ding goes

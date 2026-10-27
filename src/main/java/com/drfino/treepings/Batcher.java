@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
@@ -15,20 +16,20 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
- * Turns predicted patches into a small number of dings.
+ * Turns predicted patches into a small number of dings, built around regular-tree runs.
  *
  * <ul>
- * <li>Patches of the same crop that finish within {@code windowSeconds} of each other share
- * one ding, timed for when the LAST of them is ready.</li>
- * <li>Anything that finishes outside the player's awake hours is held until they wake up and
- * goes into one combined "Morning run" ding, together with anything else finishing within
- * the group window after waking.</li>
- * <li>Regular trees (yews, magics, etc.) also get follow-on dings, one grow cycle after each
- * ding, for replants done on mobile where RuneLite can't see them. Because farming growth is
- * tick-aligned, a replant done right after a ding finishes about one grow cycle later.</li>
+ * <li>Regular trees (yews, magics, etc.) set the schedule. Patches finishing within
+ * {@code windowSeconds} of each other share one ding, timed for when the last is ready.
+ * They also get follow-on dings, one grow cycle after each ding, for replants done on mobile
+ * where RuneLite can't see them.</li>
+ * <li>Slower crops (fruit trees, calquat, hardwoods, etc.) never ding on their own while a
+ * regular-tree ding is coming: they're listed on the next one ("also Calquat x2"). Only when
+ * no regular-tree ding follows do they get a ding of their own.</li>
+ * <li>Anything finishing outside the player's awake hours waits until they wake up; a ding
+ * that includes such an entry is labelled "Morning run".</li>
  * </ul>
  */
 final class Batcher
@@ -85,9 +86,11 @@ final class Batcher
 		final long dingAt;
 		final boolean followOn;
 		final boolean heldOvernight;
+		final boolean anchor;
 
-		Entry(String produce, String location, long dingAt, boolean followOn, boolean heldOvernight)
+		Entry(String produce, String location, long dingAt, boolean followOn, boolean heldOvernight, boolean anchor)
 		{
+			this.anchor = anchor;
 			this.produce = produce;
 			this.location = location;
 			this.dingAt = dingAt;
@@ -116,10 +119,11 @@ final class Batcher
 
 		for (ReadyPatch p : patches)
 		{
+			boolean regularTree = "tree".equals(p.getTypeKey());
 			long ding = awake.dingTime(p.getReadyAt());
-			entries.add(new Entry(p.getProduceName(), p.getLocation(), ding, false, ding != p.getReadyAt()));
+			entries.add(new Entry(p.getProduceName(), p.getLocation(), ding, false, ding != p.getReadyAt(), regularTree));
 
-			if ("tree".equals(p.getTypeKey()) && p.getGrowSeconds() > 0)
+			if (regularTree && p.getGrowSeconds() > 0)
 			{
 				// Assume the player replants when the ding goes off, not when the tree finished.
 				long base = ding;
@@ -127,7 +131,7 @@ final class Batcher
 				{
 					long ready = base + p.getGrowSeconds();
 					long next = awake.dingTime(ready);
-					entries.add(new Entry(p.getProduceName(), p.getLocation(), next, true, next != ready));
+					entries.add(new Entry(p.getProduceName(), p.getLocation(), next, true, next != ready, true));
 					base = next;
 				}
 			}
@@ -139,35 +143,36 @@ final class Batcher
 		List<Batch> out = new ArrayList<>();
 		Set<Entry> used = Collections.newSetFromMap(new IdentityHashMap<>());
 
-		// Morning runs: everything held overnight, plus anything finishing soon after waking.
-		Set<Long> wakeTimes = new TreeSet<>();
+		// Regular-tree dings, with any waiting slower crops riding along.
+		List<Entry> anchors = new ArrayList<>();
 		for (Entry e : entries)
 		{
-			if (e.heldOvernight)
+			if (e.anchor)
 			{
-				wakeTimes.add(e.dingAt);
+				anchors.add(e);
 			}
 		}
-		for (long wake : wakeTimes)
+		int i = 0;
+		while (i < anchors.size())
 		{
+			long start = anchors.get(i).dingAt;
 			List<Entry> run = new ArrayList<>();
+			while (i < anchors.size() && anchors.get(i).dingAt - start <= windowSeconds)
+			{
+				run.add(anchors.get(i++));
+			}
 			for (Entry e : entries)
 			{
-				if (used.contains(e))
-				{
-					continue;
-				}
-				if ((e.heldOvernight && e.dingAt == wake)
-					|| (!e.heldOvernight && e.dingAt >= wake && e.dingAt - wake <= windowSeconds))
+				if (!e.anchor && !used.contains(e) && e.dingAt <= start + windowSeconds)
 				{
 					run.add(e);
 				}
 			}
 			used.addAll(run);
-			out.add(morningBatch(run));
+			out.add(runBatch(run));
 		}
 
-		// Everything else: one ding per crop per group window.
+		// Slower crops with no regular-tree ding after them: one ding per crop per group window.
 		Map<String, List<Entry>> byProduce = new TreeMap<>();
 		for (Entry e : entries)
 		{
@@ -183,14 +188,14 @@ final class Batcher
 			{
 				if (!cluster.isEmpty() && e.dingAt - cluster.get(0).dingAt > windowSeconds)
 				{
-					out.add(cropBatch(cluster));
+					out.add(runBatch(cluster));
 					cluster = new ArrayList<>();
 				}
 				cluster.add(e);
 			}
 			if (!cluster.isEmpty())
 			{
-				out.add(cropBatch(cluster));
+				out.add(runBatch(cluster));
 			}
 		}
 
@@ -198,39 +203,56 @@ final class Batcher
 		return out;
 	}
 
-	private static Batch cropBatch(List<Entry> cluster)
+	/** One ding. Title lists the regular trees first, then anything riding along. */
+	private static Batch runBatch(List<Entry> run)
 	{
-		String produce = cluster.get(0).produce;
-		long readyAt = cluster.get(cluster.size() - 1).dingAt;
-		boolean allFollowOn = cluster.stream().allMatch(e -> e.followOn);
-		int n = cluster.size();
+		long readyAt = run.stream().mapToLong(e -> e.dingAt).max().getAsLong();
 
-		String title = produce + (n > 1 ? " x" + n : "") + " ready" + (allFollowOn ? " (if replanted)" : "");
-		String detail = places(cluster)
-			+ (allFollowOn ? ". Assumes you replanted at the last ding." : "");
-		return new Batch(slug(produce) + "-" + readyAt, title, readyAt, detail);
-	}
-
-	private static Batch morningBatch(List<Entry> run)
-	{
-		long readyAt = run.get(run.size() - 1).dingAt;
-		Map<String, List<Entry>> byProduce = new LinkedHashMap<>();
+		Map<String, List<Entry>> lead = new LinkedHashMap<>();
+		Map<String, List<Entry>> riders = new LinkedHashMap<>();
+		boolean hasAnchor = run.stream().anyMatch(e -> e.anchor);
 		for (Entry e : run)
 		{
-			byProduce.computeIfAbsent(e.produce, k -> new ArrayList<>()).add(e);
+			(e.anchor || !hasAnchor ? lead : riders).computeIfAbsent(e.produce, k -> new ArrayList<>()).add(e);
 		}
 
-		List<String> counts = new ArrayList<>();
+		boolean leadAllFollowOn = lead.values().stream().flatMap(List::stream).allMatch(e -> e.followOn);
+		boolean morning = lead.values().stream().flatMap(List::stream).anyMatch(e -> e.heldOvernight);
+		String title;
+		if (morning)
+		{
+			List<String> all = counts(lead);
+			all.addAll(counts(riders));
+			title = "Morning run: " + String.join(", ", all) + (leadAllFollowOn ? " (if replanted)" : "");
+		}
+		else
+		{
+			title = String.join(", ", counts(lead)) + " ready" + (leadAllFollowOn ? " (if replanted)" : "")
+				+ (riders.isEmpty() ? "" : ", also " + String.join(", ", counts(riders)));
+		}
+
 		List<String> details = new ArrayList<>();
+		for (Map<String, List<Entry>> group : Arrays.asList(lead, riders))
+		{
+			for (Map.Entry<String, List<Entry>> crop : group.entrySet())
+			{
+				boolean allFollowOn = crop.getValue().stream().allMatch(e -> e.followOn);
+				details.add(crop.getKey() + (allFollowOn ? " (if replanted)" : "") + ": " + places(crop.getValue()));
+			}
+		}
+		String key = slug(lead.keySet().iterator().next()) + "-" + readyAt;
+		return new Batch(key, title, readyAt, String.join("\n", details));
+	}
+
+	private static List<String> counts(Map<String, List<Entry>> byProduce)
+	{
+		List<String> out = new ArrayList<>();
 		for (Map.Entry<String, List<Entry>> crop : byProduce.entrySet())
 		{
 			int n = crop.getValue().size();
-			counts.add(crop.getKey() + (n > 1 ? " x" + n : ""));
-			boolean allFollowOn = crop.getValue().stream().allMatch(e -> e.followOn);
-			details.add(crop.getKey() + (allFollowOn ? " (if replanted)" : "") + ": " + places(crop.getValue()));
+			out.add(crop.getKey() + (n > 1 ? " x" + n : ""));
 		}
-		return new Batch("morning-" + readyAt, "Morning run: " + String.join(", ", counts), readyAt,
-			String.join("\n", details));
+		return out;
 	}
 
 	private static String places(List<Entry> entries)
