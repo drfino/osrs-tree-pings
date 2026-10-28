@@ -101,6 +101,11 @@ public final class FarmingPredictor
 		{
 			return null;
 		}
+		// An empty patch regrowing weeds also counts as "growing". That's not a crop.
+		if (state.getProduce() == Produce.WEEDS || state.getProduce() == Produce.SCARECROW)
+		{
+			return null;
+		}
 
 		int tickrate = state.getTickRate();
 		if (tickrate <= 0 || !offsetIsConfident(config, tickrate))
