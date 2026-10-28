@@ -1,29 +1,48 @@
 # Tree Pings
 
-**Your phone dings when it's time to do a tree run. Even with your PC off.**
+**Get a calendar notification on your phone when it's time to do a tree run. Even with your PC off.**
 
-You plant your trees with RuneLite open, like normal. Tree Pings puts the finish times on a
-private Google Calendar, and the Google Calendar app on your phone dings you when it's time to go.
+Tree Pings turns your tree timers into **events on your Google Calendar**. Each event starts
+the moment your trees are ready and has a notification set for that time, so your phone
+shows an ordinary Google Calendar notification, just like a meeting reminder.
 
-- No new app on your phone. It uses Google Calendar, which you probably already have.
-- No 3 AM dings. Anything that finishes overnight waits for one morning ding.
-- About 2 dings a day, not one per tree.
+- No new app on your phone. It uses the Google Calendar app you probably already have.
+- The events go on their own private calendar, **OSRS timers**, separate from your real one.
+- No 3 AM notifications. Anything that finishes overnight waits for one morning event.
+- About 2 events a day, not one per tree.
 
 ---
 
-## What you'll get
+## How it works
 
-A normal day looks like this:
+1. **You farm like normal, with RuneLite open.** Tree Pings reads the timers RuneLite's
+   Time Tracking plugin already keeps. It doesn't touch the game.
+2. **When your run is done, it updates your calendar.** A few minutes after your last patch
+   (or right away when you log out), chat says:
+   > Tree Pings: calendar updated. Next ding: Yew x7 ready at 2:40 PM.
+3. **At that time, your phone shows a Google Calendar notification.** It works the same
+   whether your PC is on, off, or asleep, because the events now live in Google Calendar.
+   Tap the notification to open the event and see which patches it's for.
 
-| Time | Your phone says |
-| --- | --- |
-| 8:00 AM | **Morning run: Yew x7, Palm x5, Calquat x2** |
-| 2:40 PM | **Yew x7 ready (if replanted)** |
+## What you'll see
 
-- **Your regular trees (yews, magics, etc.) decide when you get dinged.** Fruit trees,
-  calquats and hardwoods don't ding on their own. They're listed on the next ding instead.
-- **"(if replanted)"** dings are for runs you do on mobile, where RuneLite can't see you
-  replant. They assume you replanted when the last ding went off.
+On a normal day, your **OSRS timers** calendar has events like these. Each one is a short
+event at the time shown, and its notification uses the event title:
+
+| Time | Calendar event (and notification) | Inside the event |
+| --- | --- | --- |
+| 8:00 AM | **Morning run: Yew x7, Palm x5, Calquat x2** | Yew: Falador, Lumbridge, Varrock…<br>Palm: Brimhaven, Catherby…<br>Calquat: Kastori, Tai Bwo Wannai |
+| 2:40 PM | **Yew x7 ready (if replanted)** | Yew: Falador, Lumbridge, Varrock… |
+
+- **Your regular trees (yews, magics, etc.) decide when events are created.** Fruit trees,
+  calquats and hardwoods don't get events of their own. They're listed on the next
+  regular-tree event instead.
+- **"(if replanted)"** events are for runs you do on mobile, where RuneLite can't see you
+  replant. They assume you replanted when the last notification went off.
+- **The calendar keeps itself tidy.** Every update replaces upcoming Tree Pings events with
+  the current plan, and events older than 12 hours are deleted.
+- **Events are private** and only ever written to the OSRS timers calendar. Your other
+  calendars aren't touched.
 
 ---
 
@@ -58,13 +77,13 @@ This little script lives in **your own** Google account. It's the thing that wri
 > "Anyone" just means the plugin can reach the script. Nobody can do anything with it
 > without your password from step 3.
 
-### Step 2: Make sure your phone dings
+### Step 2: Make sure your phone gets the notification
 
 1. Open the **Google Calendar** app → ☰ menu → make sure **OSRS timers** is ticked.
 2. Back in the script editor, choose **`sendTestEvent`** in the dropdown and click **▶ Run**.
-3. **Wait 2 minutes.** Your phone should ding with "Tree Pings test ding".
+3. **Wait 2 minutes.** Your phone should show a Google Calendar notification called "Tree Pings test ding".
 
-**No ding?** Fix this before going on:
+**No notification?** Fix this before going on:
 - **Android:** phone Settings → Accounts → your Google account → Account sync → turn on **OSRS timers**.
 - **iPhone:** use the Google Calendar app (not Apple's Calendar). Allow its notifications in iPhone Settings.
 - Check that Do Not Disturb isn't on, then run `sendTestEvent` again.
@@ -74,21 +93,17 @@ This little script lives in **your own** Google account. It's the thing that wri
 1. In RuneLite, open the **Plugin Hub** and install **Tree Pings**.
 2. Open its settings (🔧 wrench → search "Tree Pings").
 3. Paste your **Apps Script URL** (from step 1.5) and your **Token** (the password from step 1.3).
-4. Tick **Send test ding**. Chat says *"test event created"*, and your phone dings in about 2 minutes.
+4. Tick **Send test ding**. Chat says *"test event created"*, and about 2 minutes later your phone shows the calendar notification.
 
 **You're done.** Farm like normal.
 
 ---
 
-## Using it
+## Day to day
 
-- **Do your tree run with RuneLite open.** When you're done (or when you log out), chat says:
-  > Tree Pings: calendar updated. Next ding: Yew x7 ready at 2:40 PM.
-- **When you log in,** chat tells you what's ready right now and when your next ding is.
-- **You can close RuneLite.** The dings are on your calendar and will arrive anyway.
-- **Old dings clean themselves up.** Anything that finished more than 12 hours ago is removed
-  the next time your calendar updates.
-- **Did a run on mobile?** Nothing to do. The "(if replanted)" dings already cover it.
+- **When you log in,** chat tells you what's ready right now and when your next notification is.
+- **You can close RuneLite any time** after a run. The events are already on your calendar.
+- **Did a run on mobile?** Nothing to do. The "(if replanted)" events already cover it.
   Next time you play on PC, everything updates.
 
 ---
@@ -101,8 +116,8 @@ Most people only need the first three.
 | --- | --- |
 | **Apps Script URL** | The link from setup step 1. |
 | **Token** | The password from setup step 1. |
-| **Send test ding** | Tick it to test. Your phone dings in 2 minutes. |
-| **Awake from / until** | Your waking hours (24-hour clock). Default 8 to 0 (8 AM to midnight). Anything finishing while you sleep waits for one morning ding. Set both the same to get dings around the clock. |
+| **Send test ding** | Tick it to put a test event on your calendar. Your phone gets its notification 2 minutes later. |
+| **Awake from / until** | Your waking hours (24-hour clock). Default 8 to 0 (8 AM to midnight). Anything finishing while you sleep waits for one morning event. Set both the same to get notifications around the clock. |
 | **Follow-on runs** | How many runs a day you do on mobile. Default 1. Set to 2 if you do two, or 0 if you only farm on PC. |
 | **Chat messages** | The "ready now / next ding" messages in chat. Problems always show, even if this is off. |
 | *Advanced* | Sync delay, group window and "only belled patches". You don't need to touch these. |
@@ -122,13 +137,13 @@ Tree Pings tells you in chat when something goes wrong:
 | "N trees can't be timed yet" | RuneLite is still learning the farming clock. Stand near a growing tree until it grows a stage. |
 | "Time Tracking plugin is turned off" | Turn RuneLite's built-in **Time Tracking** plugin back on. |
 
-**Events are on the calendar but your phone doesn't ding?** That's a phone setting.
+**Events are on the calendar but no notification shows up?** That's a phone setting.
 Go back through setup step 2.
 
 **Good to know:**
-- RuneLite only knows what it last saw. If you skip a mobile run, its "(if replanted)" ding still comes.
-- If a tree gets diseased while you're away, it still dings at the normal time.
-- Use one RuneScape account per calendar. Each account would overwrite the other's dings.
+- RuneLite only knows what it last saw. If you skip a mobile run, its "(if replanted)" event still notifies you.
+- If a tree gets diseased while you're away, you still get its notification at the normal time.
+- Use one RuneScape account per calendar. Each account would overwrite the other's events.
 - You can rename the calendar or change its colour. Don't delete it.
 
 ---
