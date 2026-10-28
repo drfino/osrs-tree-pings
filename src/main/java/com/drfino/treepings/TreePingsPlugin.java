@@ -84,6 +84,8 @@ public class TreePingsPlugin extends Plugin
 	private volatile boolean dirty;
 	/** Just logged in: say what's ready even if the calendar doesn't need changing. */
 	private volatile boolean announce;
+	/** The tree data behind the last successful sync, to ignore Time Tracking saves that don't change it. */
+	private volatile String lastSyncedPatches;
 
 	@Provides
 	TreePingsConfig provideConfig(ConfigManager configManager)
@@ -126,15 +128,9 @@ public class TreePingsPlugin extends Plugin
 	{
 		if (TimeTrackingKeys.CONFIG_GROUP.equals(e.getGroup()))
 		{
-			// Time Tracking saved new patch data. Wait until the run is over before syncing:
-			// every new patch change pushes the sync back again.
-			if (!dirty && config.chatMessages() && scriptUrl() != null)
-			{
-				chat("Tree Pings: saw your patches change. Your calendar updates "
-					+ config.syncDelay() + " min after your last patch, or when you log out.");
-			}
-			dirty = true;
-			schedule(config.syncDelay() * 60L);
+			// Time Tracking saves lots of things (weedy patches, birdhouses, its tick estimate).
+			// Only react when the tree data we schedule from actually changed.
+			executor.execute(this::onTimeTrackingSaved);
 			return;
 		}
 
@@ -196,6 +192,35 @@ public class TreePingsPlugin extends Plugin
 		}
 	}
 
+	private void onTimeTrackingSaved()
+	{
+		List<ReadyPatch> patches = readPatches();
+		if (patches == null || gson.toJson(patches).equals(lastSyncedPatches))
+		{
+			return;
+		}
+		// Wait until the run is over before syncing: every new patch change pushes the sync back.
+		if (!dirty && config.chatMessages() && scriptUrl() != null)
+		{
+			chat("Tree Pings: saw your trees change. Your calendar updates "
+				+ config.syncDelay() + " min after your last patch, or when you log out.");
+		}
+		dirty = true;
+		schedule(config.syncDelay() * 60L);
+	}
+
+	/** Current tree predictions from Time Tracking's saved data, or null if no profile is known yet. */
+	private List<ReadyPatch> readPatches()
+	{
+		String profile = configManager.getRSProfileKey();
+		if (profile == null)
+		{
+			return null;
+		}
+		ConfigSource source = key -> configManager.getConfiguration(TimeTrackingKeys.CONFIG_GROUP, profile, key);
+		return predictor.predictGrowing(source, config.requireBell());
+	}
+
 	private synchronized void schedule(long delaySeconds)
 	{
 		if (pending != null)
@@ -226,15 +251,13 @@ public class TreePingsPlugin extends Plugin
 			return CompletableFuture.completedFuture(false);
 		}
 
-		String profile = configManager.getRSProfileKey();
-		if (profile == null)
+		List<ReadyPatch> patches = readPatches();
+		if (patches == null)
 		{
 			// Not logged in since the client started; nothing new to report.
 			return CompletableFuture.completedFuture(true);
 		}
-
-		ConfigSource source = key -> configManager.getConfiguration(TimeTrackingKeys.CONFIG_GROUP, profile, key);
-		List<ReadyPatch> patches = predictor.predictGrowing(source, config.requireBell());
+		String patchesJson = gson.toJson(patches);
 
 		Batcher.Awake awake = new Batcher.Awake(ZoneId.systemDefault(), config.awakeFrom(), config.awakeUntil());
 		List<Batch> batches = Batcher.build(patches, Instant.now().getEpochSecond(),
@@ -244,6 +267,7 @@ public class TreePingsPlugin extends Plugin
 		String batchesJson = gson.toJson(batches);
 		if (batchesJson.equals(lastSentBatches))
 		{
+			lastSyncedPatches = patchesJson;
 			if (announce && config.chatMessages())
 			{
 				chat(syncSummary(readyNow, batches, false));
@@ -263,6 +287,7 @@ public class TreePingsPlugin extends Plugin
 			if (ok)
 			{
 				lastSentBatches = batchesJson;
+				lastSyncedPatches = patchesJson;
 				retrySeconds = 0;
 				if (config.chatMessages())
 				{
