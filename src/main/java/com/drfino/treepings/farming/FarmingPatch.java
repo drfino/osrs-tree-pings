@@ -22,23 +22,57 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.treepings.farming;
+package com.drfino.treepings.farming;
 
-import java.awt.Color;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import net.runelite.client.ui.ColorScheme;
+import lombok.Setter;
+import lombok.ToString;
+import net.runelite.api.annotations.Varbit;
 
-@RequiredArgsConstructor
+
 @Getter
-public enum CropState
+@ToString(onlyExplicitlyIncluded = true)
+class FarmingPatch
 {
-	HARVESTABLE(ColorScheme.PROGRESS_COMPLETE_COLOR),
-	GROWING(ColorScheme.PROGRESS_COMPLETE_COLOR),
-	DISEASED(ColorScheme.PROGRESS_INPROGRESS_COLOR),
-	DEAD(ColorScheme.PROGRESS_ERROR_COLOR),
-	EMPTY(ColorScheme.MEDIUM_GRAY_COLOR),
-	FILLING(ColorScheme.PROGRESS_INPROGRESS_COLOR);
+	@Setter(AccessLevel.PACKAGE)
+	@ToString.Include
+	private FarmingRegion region;
+	@ToString.Include
+	private final String name;
+	@Getter(onMethod_ = {@Varbit})
+	private final int varbit;
+	@ToString.Include
+	private final PatchImplementation implementation;
+	private final int farmer;
+	private final int patchNumber;
 
-	private final Color color;
+	FarmingPatch(String name, @Varbit int varbit, PatchImplementation implementation)
+	{
+		this(name, varbit, implementation, -1);
+	}
+
+	FarmingPatch(String name, @Varbit int varbit, PatchImplementation implementation, int farmer)
+	{
+		this(name, varbit, implementation, farmer, -1);
+	}
+
+	FarmingPatch(String name, @Varbit int varbit, PatchImplementation implementation, int farmer, int patchNumber)
+	{
+		this.name = name;
+		this.varbit = varbit;
+		this.implementation = implementation;
+		this.farmer = farmer;
+		this.patchNumber = patchNumber;
+	}
+
+	String configKey()
+	{
+		return region.getRegionID() + "." + varbit;
+	}
+
+	String notifyConfigKey()
+	{
+		return TimeTrackingKeys.NOTIFY + "." + region.getRegionID() + "." + varbit;
+	}
 }

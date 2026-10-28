@@ -1,6 +1,6 @@
-package com.treepings;
+package com.drfino.treepings;
 
-import com.treepings.farming.ReadyPatch;
+import com.drfino.treepings.farming.ReadyPatch;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;

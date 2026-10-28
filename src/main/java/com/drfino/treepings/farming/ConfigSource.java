@@ -1,4 +1,4 @@
-package com.treepings.farming;
+package com.drfino.treepings.farming;
 
 /**
  * Read-only view of the Time Tracking plugin's stored values for one RuneScape profile.

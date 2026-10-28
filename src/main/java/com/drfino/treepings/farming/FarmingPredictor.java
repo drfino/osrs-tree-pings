@@ -4,7 +4,7 @@
  * Copyright (c) 2018 Abex and RuneLite contributors, BSD 2-Clause License.
  * See NOTICE in this repository.
  */
-package com.treepings.farming;
+package com.drfino.treepings.farming;
 
 import java.util.ArrayList;
 import java.util.EnumSet;

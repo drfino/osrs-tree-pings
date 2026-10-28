@@ -1,4 +1,4 @@
-package com.treepings;
+package com.drfino.treepings;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;

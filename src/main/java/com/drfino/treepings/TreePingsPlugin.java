@@ -1,9 +1,9 @@
-package com.treepings;
+package com.drfino.treepings;
 
-import com.treepings.farming.ConfigSource;
-import com.treepings.farming.FarmingPredictor;
-import com.treepings.farming.ReadyPatch;
-import com.treepings.farming.TimeTrackingKeys;
+import com.drfino.treepings.farming.ConfigSource;
+import com.drfino.treepings.farming.FarmingPredictor;
+import com.drfino.treepings.farming.ReadyPatch;
+import com.drfino.treepings.farming.TimeTrackingKeys;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.Provides;

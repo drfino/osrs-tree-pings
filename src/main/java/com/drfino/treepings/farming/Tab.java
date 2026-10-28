@@ -22,32 +22,32 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.treepings.farming;
+package com.drfino.treepings.farming;
 
-import lombok.Value;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import net.runelite.api.gameval.ItemID;
 
-@Value
-class PatchState
+@RequiredArgsConstructor
+@Getter
+public enum Tab
 {
-	private final Produce produce;
-	private final CropState cropState;
-	private final int stage;
+	OVERVIEW("Overview", ItemID.DS2_CRANDOR_NOTES),
+	CLOCK("Timers & Stopwatches", ItemID.TRAIL_WATCH),
+	BIRD_HOUSE("Bird Houses", ItemID.BIRDHOUSE_OAK),
+	ALLOTMENT("Allotment Patches", ItemID.CABBAGE),
+	FLOWER("Flower Patches", ItemID.FLOWERS_WATERFALL_QUEST_RED),
+	HERB("Herb Patches", ItemID.UNIDENTIFIED_RANARR),
+	TREE("Tree Patches", ItemID.YEW_LOGS),
+	FRUIT_TREE("Fruit Tree Patches", ItemID.PINEAPPLE),
+	HOPS("Hops Patches", ItemID.BARLEY),
+	BUSH("Bush Patches", ItemID.POISONIVY_BERRIES),
+	GRAPE("Grape Patches", ItemID.GRAPES),
+	SPECIAL("Special Patches", ItemID.BITTERCAP_MUSHROOM),
+	TIME_OFFSET("Farming Tick Offset", ItemID.WATERING_CAN_0);
 
-	int getStages()
-	{
-		return cropState == CropState.HARVESTABLE || cropState == CropState.FILLING ? produce.getHarvestStages() : produce.getStages();
-	}
+	public static final Tab[] FARMING_TABS = {HERB, TREE, FRUIT_TREE, SPECIAL, FLOWER, ALLOTMENT, BUSH, GRAPE, HOPS};
 
-	int getTickRate()
-	{
-		switch (cropState)
-		{
-			case HARVESTABLE:
-				return produce.getRegrowTickrate();
-			case GROWING:
-				return produce.getTickrate();
-			default:
-				return 0;
-		}
-	}
+	private final String name;
+	private final int itemID;
 }

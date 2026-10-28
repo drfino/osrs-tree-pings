@@ -1,4 +1,4 @@
-package com.treepings.farming;
+package com.drfino.treepings.farming;
 
 /** A belled patch that is still growing, with its predicted finish time. */
 public final class ReadyPatch
