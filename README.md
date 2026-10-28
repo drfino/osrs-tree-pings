@@ -145,6 +145,6 @@ Go back through setup step 2.
 
 Build and run locally with `./gradlew run` (JDK 11+).
 
-Files under `src/main/java/com/drfino/treepings/farming` are copied from RuneLite's Time
-Tracking plugin under the BSD 2-Clause License (see `NOTICE`), because those classes aren't
-public API. Tree Pings only reads the `timetracking` config group and never writes to it.
+The `farming` folder contains code copied from RuneLite's Time Tracking plugin (BSD 2-Clause
+License, see `NOTICE`), because RuneLite doesn't make those classes public. Tree Pings only
+reads Time Tracking's saved data and never changes it.
