@@ -7,7 +7,7 @@ private Google Calendar, and the Google Calendar app on your phone dings you whe
 
 - No new app on your phone. It uses Google Calendar, which you probably already have.
 - No 3 AM dings. Anything that finishes overnight waits for one morning ding.
-- About 3 dings a day, not one per tree.
+- About 2 dings a day, not one per tree.
 
 ---
 
@@ -19,7 +19,6 @@ A normal day looks like this:
 | --- | --- |
 | 8:00 AM | **Morning run: Yew x7, Palm x5, Calquat x2** |
 | 2:40 PM | **Yew x7 ready (if replanted)** |
-| 9:20 PM | **Yew x7 ready (if replanted)** |
 
 - **Your regular trees (yews, magics, etc.) decide when you get dinged.** Fruit trees,
   calquats and hardwoods don't ding on their own. They're listed on the next ding instead.
@@ -102,7 +101,7 @@ Most people only need the first three.
 | **Token** | The password from setup step 1. |
 | **Send test ding** | Tick it to test. Your phone dings in 2 minutes. |
 | **Awake from / until** | Your waking hours (24-hour clock). Default 8 to 0 (8 AM to midnight). Anything finishing while you sleep waits for one morning ding. Set both the same to get dings around the clock. |
-| **Follow-on runs** | How many runs a day you do on mobile. Default 2. Set to 0 if you only farm on PC. |
+| **Follow-on runs** | How many runs a day you do on mobile. Default 1. Set to 2 if you do two, or 0 if you only farm on PC. |
 | **Chat messages** | The "ready now / next ding" messages in chat. Problems always show, even if this is off. |
 | *Advanced* | Sync delay, group window and "only belled patches". You don't need to touch these. |
 

@@ -82,12 +82,12 @@ public interface TreePingsConfig extends Config
 	@ConfigItem(
 		keyName = "followOnCycles",
 		name = "Follow-on runs",
-		description = "Regular-tree runs you do each day that RuneLite can't see (e.g. on mobile). Each gets an '(if replanted)' ding one grow cycle after the last.",
+		description = "Regular-tree runs you do each day that RuneLite can't see (e.g. on mobile). Each gets an '(if replanted)' ding one grow cycle after the last. 1 = one mobile run a day.",
 		position = 6
 	)
 	default int followOnCycles()
 	{
-		return 2;
+		return 1;
 	}
 
 	@ConfigItem(
