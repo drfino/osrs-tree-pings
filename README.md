@@ -89,6 +89,32 @@ out or close RuneLite), Tree Pings syncs the full set of upcoming dings. Open th
 - If Time Tracking doesn't yet know your farming tick offset (fresh install), there's no
   confident finish time, so nothing is scheduled until it has seen a patch change.
 
+## Troubleshooting
+
+Tree Pings tells you in chat when something on its side goes wrong (these messages show
+even with Chat messages off). What each one means:
+
+| Chat message | Fix |
+| --- | --- |
+| "it isn't set up yet" | Paste your Apps Script URL and token into the plugin settings. |
+| "couldn't update your calendar (bad token)" | The token must match the `TOKEN` script property exactly. |
+| "couldn't update your calendar (HTTP …)" / "unexpected reply" | Check the URL ends in `/exec` and the web app is deployed with Who has access: **Anyone**. |
+| "couldn't update your calendar (couldn't reach Google)" | Network problem. It retries on its own. |
+| "N trees can't be timed yet" | RuneLite hasn't learned the farming clock. Stand near a growing tree until it grows a stage. |
+| "Time Tracking plugin is turned off" | Turn RuneLite's Time Tracking plugin back on. |
+
+Things the plugin **can't** see, and how to check them:
+
+- **Events appear but your phone doesn't ding.** The calendar is hidden or its notifications
+  are off on your phone, or Do Not Disturb is blocking Google Calendar. Tick **Send test
+  ding** after any phone change.
+- **You deleted or recreated the calendar, or deleted the `CALENDAR_ID` script property.**
+  The script then makes a new calendar, which your phone may not be showing yet.
+- **A tree got diseased or died while you weren't looking.** RuneLite only knows what it last
+  saw, so it still dings at the normal time.
+- **More than one account.** Each sync replaces the calendar with the logged-in account's
+  trees. Use one account per calendar.
+
 ## Plugin Hub notes
 
 - Tree Pings reads, and never writes, the `timetracking` config group.

@@ -33,6 +33,9 @@ public final class FarmingPredictor
 
 	private final FarmingWorld world = new FarmingWorld();
 
+	/** Growing trees skipped by the last call because RuneLite hasn't learned the farming clock yet. */
+	private int untimedCount;
+
 	/**
 	 * Returns every tree-type patch that RuneLite last saw growing, with its predicted
 	 * finish time (which may already be in the past: the caller still needs it to
@@ -44,6 +47,7 @@ public final class FarmingPredictor
 	public List<ReadyPatch> predictGrowing(ConfigSource config, boolean requireBell)
 	{
 		List<ReadyPatch> out = new ArrayList<>();
+		untimedCount = 0;
 		for (Map.Entry<Tab, Set<FarmingPatch>> tab : world.getTabs().entrySet())
 		{
 			for (FarmingPatch patch : tab.getValue())
@@ -108,8 +112,13 @@ public final class FarmingPredictor
 		}
 
 		int tickrate = state.getTickRate();
-		if (tickrate <= 0 || !offsetIsConfident(config, tickrate))
+		if (tickrate <= 0)
 		{
+			return null;
+		}
+		if (!offsetIsConfident(config, tickrate))
+		{
+			untimedCount++;
 			return null;
 		}
 
@@ -126,6 +135,15 @@ public final class FarmingPredictor
 			patch.getRegion().getName(),
 			doneEstimate,
 			growSeconds);
+	}
+
+	/**
+	 * How many growing trees the last {@link #predictGrowing} call had to skip because RuneLite
+	 * hasn't yet watched a long enough growth tick to know the farming clock.
+	 */
+	public int getUntimedCount()
+	{
+		return untimedCount;
 	}
 
 	/** Same confidence rule RuneLite uses before it sends a farming notification. */

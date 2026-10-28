@@ -86,6 +86,8 @@ public class TreePingsPlugin extends Plugin
 	private volatile boolean announce;
 	/** The tree data behind the last successful sync, to ignore Time Tracking saves that don't change it. */
 	private volatile String lastSyncedPatches;
+	private volatile boolean warnedUntimed;
+	private volatile boolean warnedTimeTrackingOff;
 
 	@Provides
 	TreePingsConfig provideConfig(ConfigManager configManager)
@@ -227,6 +229,34 @@ public class TreePingsPlugin extends Plugin
 		schedule(config.syncDelay() * 60L);
 	}
 
+	/**
+	 * Problems on the RuneLite side that would otherwise look like "no dings". Always shown
+	 * (once per session), even with chat messages off.
+	 */
+	private void warnAboutData()
+	{
+		if (!warnedTimeTrackingOff
+			&& "false".equals(configManager.getConfiguration("runelite", "timetrackingplugin")))
+		{
+			warnedTimeTrackingOff = true;
+			chat("Tree Pings: RuneLite's Time Tracking plugin is turned off, so your tree times can't update."
+				+ " Turn it back on in the plugin list.");
+		}
+
+		int untimed = predictor.getUntimedCount();
+		if (untimed > 0 && !warnedUntimed)
+		{
+			warnedUntimed = true;
+			chat("Tree Pings: " + untimed + (untimed == 1 ? " tree" : " trees") + " can't be timed yet:"
+				+ " RuneLite is still learning the farming clock. It learns by watching a tree grow a stage"
+				+ " while you're nearby, so dings for those trees will start after that.");
+		}
+		else if (untimed == 0)
+		{
+			warnedUntimed = false;
+		}
+	}
+
 	/** Current tree predictions from Time Tracking's saved data, or null if no profile is known yet. */
 	private List<ReadyPatch> readPatches()
 	{
@@ -276,6 +306,7 @@ public class TreePingsPlugin extends Plugin
 			return CompletableFuture.completedFuture(true);
 		}
 		String patchesJson = gson.toJson(patches);
+		warnAboutData();
 
 		Batcher.Awake awake = new Batcher.Awake(ZoneId.systemDefault(), config.awakeFrom(), config.awakeUntil());
 		List<Batch> batches = Batcher.build(patches, Instant.now().getEpochSecond(),
