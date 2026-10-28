@@ -23,8 +23,10 @@
  *       {"key": "yew-1", "title": "7 yews ready", "readyAt": 1793050800, "detail": "Falador, ..."}
  *     ]
  *   }
- * The batches list is the FULL current set. Every future event this script made is
- * replaced by it, so a replant or a harvest never leaves a stale ding behind.
+ * The batches list is the FULL current set. Future events this script made are made to
+ * match it: unchanged events are left alone, changed ones are moved or renamed in place
+ * (so they keep their ID), and leftovers are deleted, so a replant or a harvest never
+ * leaves a stale ding behind.
  * Dings that finished more than KEEP_PAST_HOURS ago are deleted, so the calendar
  * only shows what's coming up.
  */
@@ -91,13 +93,16 @@ function syncBatches_(batches) {
       }
     });
 
-    cal.getEvents(now, until).forEach(function (ev) {
-      if (ev.getTag(TAG) && ev.getTag('key') !== 'test') {
-        ev.deleteEvent();
-      }
+    // Update events in place instead of delete-and-recreate, so each event keeps its ID.
+    // Phones (e.g. Pixel At a Glance) remember the next event by ID; replacing it leaves
+    // them pointing at an event that no longer exists ("event not found").
+    const existing = cal.getEvents(now, until).filter(function (ev) {
+      return ev.getTag(TAG) && ev.getTag('key') !== 'test';
+    }).map(function (ev) {
+      return { ev: ev, start: ev.getStartTime().getTime(), title: ev.getTitle() };
     });
 
-    let written = 0;
+    const wanted = [];
     batches.forEach(function (b) {
       const readyAt = Number(b.readyAt);
       if (!b.key || !b.title || !isFinite(readyAt)) {
@@ -107,9 +112,55 @@ function syncBatches_(batches) {
       if (start <= now) {
         return; // already ready; nothing to remind about
       }
-      createEvent_(cal, String(b.key), String(b.title), start, String(b.detail || ''));
+      wanted.push({ key: String(b.key), title: String(b.title), start: start, detail: String(b.detail || '') });
+    });
+
+    const used = [];
+    const todo = [];
+
+    // 1. Unchanged events stay exactly as they are (refresh the details if needed).
+    wanted.forEach(function (w) {
+      const match = existing.find(function (x) {
+        return used.indexOf(x) < 0 && x.start === w.start.getTime() && x.title === w.title;
+      });
+      if (match) {
+        used.push(match);
+        if (match.ev.getDescription() !== w.detail) {
+          match.ev.setDescription(w.detail);
+        }
+        match.ev.setTag('key', w.key);
+      } else {
+        todo.push(w);
+      }
+    });
+
+    // 2. Changed events: move or rename a leftover event rather than replacing it.
+    const spare = existing.filter(function (x) { return used.indexOf(x) < 0; })
+      .sort(function (a, b) { return a.start - b.start; });
+    todo.sort(function (a, b) { return a.start - b.start; });
+    let written = 0;
+    todo.forEach(function (w) {
+      const x = spare.shift();
+      if (x) {
+        if (x.start !== w.start.getTime()) {
+          x.ev.setTime(w.start, new Date(w.start.getTime() + EVENT_MINUTES * 60 * 1000));
+        }
+        if (x.title !== w.title) {
+          x.ev.setTitle(w.title);
+        }
+        x.ev.setDescription(w.detail);
+        x.ev.setTag('key', w.key);
+      } else {
+        createEvent_(cal, w.key, w.title, w.start, w.detail);
+      }
       written++;
     });
+
+    // 3. Anything left over is no longer needed.
+    spare.forEach(function (x) {
+      x.ev.deleteEvent();
+    });
+
     return written;
   } finally {
     lock.releaseLock();
