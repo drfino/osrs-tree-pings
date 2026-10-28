@@ -1,4 +1,4 @@
-package com.drfino.treepings;
+package com.treepings;
 
 /** One calendar event: a group of patches that finish together. Serialized as-is to JSON. */
 public final class Batch

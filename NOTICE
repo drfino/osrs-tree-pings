@@ -1,6 +1,6 @@
 Tree Pings includes code from RuneLite's Time Tracking plugin
 (net.runelite.client.plugins.timetracking.farming), copied into
-com.drfino.treepings.farming with package changes and small edits.
+com.treepings.farming with package changes and small edits.
 That code is Copyright (c) RuneLite contributors and is used under the
 BSD 2-Clause License; the full license text is in NOTICE-RuneLite-LICENSE.
 Source: https://github.com/runelite/runelite (commit d955988815db9138241ee99991880f68a626496b)

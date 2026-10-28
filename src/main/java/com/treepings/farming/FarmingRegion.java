@@ -22,32 +22,39 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.drfino.treepings.farming;
+package com.treepings.farming;
 
-import lombok.Value;
+import lombok.Getter;
+import net.runelite.api.coords.WorldPoint;
 
-@Value
-class PatchState
+@Getter
+public class FarmingRegion
 {
-	private final Produce produce;
-	private final CropState cropState;
-	private final int stage;
+	private final String name;
+	private final int regionID;
+	private final boolean definite;
+	private final FarmingPatch[] patches;
 
-	int getStages()
+	FarmingRegion(String name, int regionID, boolean definite, FarmingPatch... patches)
 	{
-		return cropState == CropState.HARVESTABLE || cropState == CropState.FILLING ? produce.getHarvestStages() : produce.getStages();
+		this.name = name;
+		this.regionID = regionID;
+		this.definite = definite;
+		this.patches = patches;
+		for (FarmingPatch p : patches)
+		{
+			p.setRegion(this);
+		}
 	}
 
-	int getTickRate()
+	public boolean isInBounds(WorldPoint loc)
 	{
-		switch (cropState)
-		{
-			case HARVESTABLE:
-				return produce.getRegrowTickrate();
-			case GROWING:
-				return produce.getTickrate();
-			default:
-				return 0;
-		}
+		return true;
+	}
+
+	@Override
+	public String toString()
+	{
+		return name;
 	}
 }

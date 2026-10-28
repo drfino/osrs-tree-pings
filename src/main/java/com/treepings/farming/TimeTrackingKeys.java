@@ -1,4 +1,4 @@
-package com.drfino.treepings.farming;
+package com.treepings.farming;
 
 /**
  * Config keys written by RuneLite's built-in Time Tracking plugin.

@@ -22,23 +22,32 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.drfino.treepings.farming;
+package com.treepings.farming;
 
-import java.awt.Color;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.runelite.client.ui.ColorScheme;
+import net.runelite.api.gameval.ItemID;
 
 @RequiredArgsConstructor
 @Getter
-public enum CropState
+public enum Tab
 {
-	HARVESTABLE(ColorScheme.PROGRESS_COMPLETE_COLOR),
-	GROWING(ColorScheme.PROGRESS_COMPLETE_COLOR),
-	DISEASED(ColorScheme.PROGRESS_INPROGRESS_COLOR),
-	DEAD(ColorScheme.PROGRESS_ERROR_COLOR),
-	EMPTY(ColorScheme.MEDIUM_GRAY_COLOR),
-	FILLING(ColorScheme.PROGRESS_INPROGRESS_COLOR);
+	OVERVIEW("Overview", ItemID.DS2_CRANDOR_NOTES),
+	CLOCK("Timers & Stopwatches", ItemID.TRAIL_WATCH),
+	BIRD_HOUSE("Bird Houses", ItemID.BIRDHOUSE_OAK),
+	ALLOTMENT("Allotment Patches", ItemID.CABBAGE),
+	FLOWER("Flower Patches", ItemID.FLOWERS_WATERFALL_QUEST_RED),
+	HERB("Herb Patches", ItemID.UNIDENTIFIED_RANARR),
+	TREE("Tree Patches", ItemID.YEW_LOGS),
+	FRUIT_TREE("Fruit Tree Patches", ItemID.PINEAPPLE),
+	HOPS("Hops Patches", ItemID.BARLEY),
+	BUSH("Bush Patches", ItemID.POISONIVY_BERRIES),
+	GRAPE("Grape Patches", ItemID.GRAPES),
+	SPECIAL("Special Patches", ItemID.BITTERCAP_MUSHROOM),
+	TIME_OFFSET("Farming Tick Offset", ItemID.WATERING_CAN_0);
 
-	private final Color color;
+	public static final Tab[] FARMING_TABS = {HERB, TREE, FRUIT_TREE, SPECIAL, FLOWER, ALLOTMENT, BUSH, GRAPE, HOPS};
+
+	private final String name;
+	private final int itemID;
 }
