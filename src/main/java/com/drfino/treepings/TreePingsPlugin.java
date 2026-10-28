@@ -99,8 +99,13 @@ public class TreePingsPlugin extends Plugin
 	protected void startUp()
 	{
 		lastSentBatches = null;
+		lastSyncedPatches = null;
 		retrySeconds = 0;
+		dirty = false;
+		announce = false;
 		warnedBadSetup = false;
+		warnedUntimed = false;
+		warnedTimeTrackingOff = false;
 		schedule(5);
 	}
 
@@ -211,7 +216,8 @@ public class TreePingsPlugin extends Plugin
 			if (!warnedBadSetup)
 			{
 				warnedBadSetup = true;
-				chat("Tree Pings: saw your trees change, but it isn't set up yet. Add your Apps Script URL and token in its settings.");
+				chat("Tree Pings: saw your trees change, but it isn't set up yet. Add your Apps Script URL"
+						+ " (the script.google.com link ending in /exec) and token in its settings.");
 			}
 			return;
 		}
