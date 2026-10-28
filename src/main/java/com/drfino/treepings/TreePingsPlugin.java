@@ -76,6 +76,13 @@ public class TreePingsPlugin extends Plugin
 
 	private final FarmingPredictor predictor = new FarmingPredictor();
 
+	/**
+	 * The script rewrites the calendar before it answers, which can take 10-20 seconds
+	 * (several Calendar calls per event). RuneLite's client gives up after 10 seconds, which
+	 * reported a failure even though the calendar had updated.
+	 */
+	private OkHttpClient scriptClient;
+
 	private ScheduledFuture<?> pending;
 	private volatile String lastSentBatches;
 	private volatile long retrySeconds;
@@ -98,6 +105,10 @@ public class TreePingsPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
+		scriptClient = okHttpClient.newBuilder()
+			.readTimeout(60, TimeUnit.SECONDS)
+			.callTimeout(90, TimeUnit.SECONDS)
+			.build();
 		lastSentBatches = null;
 		lastSyncedPatches = null;
 		retrySeconds = 0;
@@ -399,13 +410,14 @@ public class TreePingsPlugin extends Plugin
 			.build();
 
 		// Apps Script answers a POST with a 302; OkHttp follows it with a GET that returns our JSON reply.
-		okHttpClient.newCall(request).enqueue(new Callback()
+		scriptClient.newCall(request).enqueue(new Callback()
 		{
 			@Override
 			public void onFailure(Call call, IOException e)
 			{
 				log.debug("Tree Pings POST failed", e);
-				done.accept(false, "couldn't reach Google");
+				done.accept(false, e instanceof java.io.InterruptedIOException
+					? "Google took too long to answer" : "couldn't reach Google");
 				result.complete(false);
 			}
 
