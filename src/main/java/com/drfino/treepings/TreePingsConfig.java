@@ -93,12 +93,23 @@ public interface TreePingsConfig extends Config
 	@ConfigItem(
 		keyName = "chatMessages",
 		name = "Chat messages",
-		description = "Show a chat message when a run is detected and when your calendar is updated",
+		description = "When you log in or your calendar updates, say what's ready now and when the next ding is. Problems are always shown, even with this off.",
 		position = 7
 	)
 	default boolean chatMessages()
 	{
 		return true;
+	}
+
+	@ConfigItem(
+		keyName = "tipShown",
+		name = "",
+		description = "",
+		hidden = true
+	)
+	default boolean tipShown()
+	{
+		return false;
 	}
 
 	@Range(min = 1, max = 30)

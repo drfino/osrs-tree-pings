@@ -139,6 +139,11 @@ public class TreePingsPlugin extends Plugin
 			return;
 		}
 
+		if ("tipShown".equals(e.getKey()))
+		{
+			return;
+		}
+
 		if ("sendTest".equals(e.getKey()))
 		{
 			if (config.sendTest())
@@ -199,12 +204,25 @@ public class TreePingsPlugin extends Plugin
 		{
 			return;
 		}
-		// Wait until the run is over before syncing: every new patch change pushes the sync back.
-		if (!dirty && config.chatMessages() && scriptUrl() != null)
+		if (scriptUrl() == null || config.token().isEmpty())
 		{
-			chat("Tree Pings: saw your trees change. Your calendar updates "
-				+ config.syncDelay() + " min after your last patch, or when you log out.");
+			if (!warnedBadSetup)
+			{
+				warnedBadSetup = true;
+				chat("Tree Pings: saw your trees change, but it isn't set up yet. Add your Apps Script URL and token in its settings.");
+			}
+			return;
 		}
+		// One-time tip so a new player knows why nothing happens yet. It doesn't claim success:
+		// the "calendar updated" message only appears once the script has accepted the sync.
+		if (!dirty && config.chatMessages() && !config.tipShown())
+		{
+			configManager.setConfiguration(TreePingsConfig.GROUP, "tipShown", true);
+			chat("Tree Pings: saw your trees change. Your calendar updates " + config.syncDelay()
+				+ " min after your last patch, or when you log out, and you'll see \"calendar updated\" when it's done."
+				+ " (One-time tip: this message won't show again.)");
+		}
+		// Wait until the run is over before syncing: every new patch change pushes the sync back.
 		dirty = true;
 		schedule(config.syncDelay() * 60L);
 	}
@@ -282,13 +300,14 @@ public class TreePingsPlugin extends Plugin
 		body.put("batches", batches);
 
 		log.debug("Tree Pings sending {} dings: {}", batches.size(), batches);
-		return post(url, gson.toJson(body), ok ->
+		return post(url, gson.toJson(body), (ok, error) ->
 		{
 			if (ok)
 			{
 				lastSentBatches = batchesJson;
 				lastSyncedPatches = patchesJson;
 				retrySeconds = 0;
+				warnedBadSetup = false;
 				if (config.chatMessages())
 				{
 					chat(syncSummary(readyNow, batches, true));
@@ -297,6 +316,14 @@ public class TreePingsPlugin extends Plugin
 			}
 			else
 			{
+				// Always say when a sync fails (once until something changes), even with chat
+				// messages off: a silent failure looks exactly like a working plugin.
+				if (!warnedBadSetup)
+				{
+					warnedBadSetup = true;
+					chat("Tree Pings: couldn't update your calendar (" + error + "). " + setupHint(error)
+						+ " It keeps retrying in the background.");
+				}
 				retrySeconds = retrySeconds == 0 ? 60 : Math.min(retrySeconds * 2, MAX_RETRY_SECONDS);
 				schedule(retrySeconds);
 			}
@@ -315,14 +342,15 @@ public class TreePingsPlugin extends Plugin
 		Map<String, Object> body = new LinkedHashMap<>();
 		body.put("token", config.token());
 		body.put("test", true);
-		post(url, gson.toJson(body), ok -> chat(ok
+		post(url, gson.toJson(body), (ok, error) -> chat(ok
 			? "Tree Pings: test event created. Your phone should ding in about 2 minutes."
-			: "Tree Pings: test failed. Check the URL and token."));
+			: "Tree Pings: test failed (" + error + "). " + setupHint(error)));
 	}
 
 	private interface Done
 	{
-		void accept(boolean ok);
+		/** {@code error} is null on success. */
+		void accept(boolean ok, String error);
 	}
 
 	private CompletableFuture<Boolean> post(HttpUrl url, String json, Done done)
@@ -340,7 +368,7 @@ public class TreePingsPlugin extends Plugin
 			public void onFailure(Call call, IOException e)
 			{
 				log.debug("Tree Pings POST failed", e);
-				done.accept(false);
+				done.accept(false, "couldn't reach Google");
 				result.complete(false);
 			}
 
@@ -375,19 +403,18 @@ public class TreePingsPlugin extends Plugin
 
 					if (!ok)
 					{
-						log.debug("Tree Pings sync rejected: {} {}", error, text);
-						if ("bad token".equals(error) && !warnedBadSetup)
+						log.debug("Tree Pings request rejected: {} {}", error, text);
+						if (error == null)
 						{
-							warnedBadSetup = true;
-							chat("Tree Pings: the script rejected the token. Check it matches the TOKEN script property.");
+							error = "unexpected reply";
 						}
 					}
-					done.accept(ok);
+					done.accept(ok, ok ? null : error);
 					result.complete(ok);
 				}
 				catch (IOException e)
 				{
-					done.accept(false);
+					done.accept(false, "couldn't read the reply");
 					result.complete(false);
 				}
 			}
@@ -422,6 +449,15 @@ public class TreePingsPlugin extends Plugin
 			sb.append("Next ding: ").append(next.title).append(" at ").append(at).append('.');
 		}
 		return sb.toString();
+	}
+
+	private static String setupHint(String error)
+	{
+		if ("bad token".equals(error))
+		{
+			return "Check the token matches the TOKEN script property.";
+		}
+		return "Check the Apps Script URL, and that the web app is deployed with access: Anyone.";
 	}
 
 	private HttpUrl scriptUrl()

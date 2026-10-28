@@ -72,7 +72,7 @@ out or close RuneLite), Tree Pings syncs the full set of upcoming dings. Open th
 | Awake from (hour) | 8 | Anything finishing while you sleep goes into one "Morning run" ding at this hour. |
 | Awake until (hour) | 0 (midnight) | Set it equal to "Awake from" for dings around the clock. |
 | Follow-on runs | 2 | Regular-tree runs you do each day that RuneLite can't see, e.g. on mobile. Each gets an "(if replanted)" ding. 2 matches one PC run plus two mobile runs. |
-| Chat messages | on | When you log in or your calendar updates: what's ready now and when the next ding is. Also a message when a run is detected. |
+| Chat messages | on | When you log in or your calendar updates: what's ready now and when the next ding is. The first run you do also gets a one-time tip about the sync delay. Problems (wrong URL or token, Google unreachable) are always shown, even with this off. |
 
 **Advanced** (collapsed): Sync delay (5 min, how long after your last patch change it waits before syncing; logging out or closing RuneLite syncs right away), Group window (45 min, patches finishing this close together share a ding), Only belled patches (off).
 
