@@ -86,6 +86,8 @@ This little script lives in **your own** Google account. It's the thing that wri
   > Tree Pings: calendar updated. Next ding: Yew x7 ready at 2:40 PM.
 - **When you log in,** chat tells you what's ready right now and when your next ding is.
 - **You can close RuneLite.** The dings are on your calendar and will arrive anyway.
+- **Old dings clean themselves up.** Anything that finished more than 12 hours ago is removed
+  the next time your calendar updates.
 - **Did a run on mobile?** Nothing to do. The "(if replanted)" dings already cover it.
   Next time you play on PC, everything updates.
 

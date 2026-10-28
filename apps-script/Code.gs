@@ -25,12 +25,16 @@
  *   }
  * The batches list is the FULL current set. Every future event this script made is
  * replaced by it, so a replant or a harvest never leaves a stale ding behind.
+ * Dings that finished more than KEEP_PAST_HOURS ago are deleted, so the calendar
+ * only shows what's coming up.
  */
 
 const CALENDAR_NAME = 'OSRS timers';
 const TAG = 'treepings';
 const EVENT_MINUTES = 10;
 const LOOKAHEAD_DAYS = 14;
+const KEEP_PAST_HOURS = 12;   // finished dings older than this are cleaned up
+const CLEANUP_DAYS = 30;      // how far back cleanup looks
 
 function doPost(e) {
   try {
@@ -77,6 +81,16 @@ function syncBatches_(batches) {
   try {
     const now = new Date();
     const until = new Date(now.getTime() + LOOKAHEAD_DAYS * 24 * 3600 * 1000);
+
+    // Clean up old dings so the calendar only shows what's coming up.
+    const keepFrom = new Date(now.getTime() - KEEP_PAST_HOURS * 3600 * 1000);
+    const cleanFrom = new Date(now.getTime() - CLEANUP_DAYS * 24 * 3600 * 1000);
+    cal.getEvents(cleanFrom, keepFrom).forEach(function (ev) {
+      if (ev.getTag(TAG) && ev.getEndTime() <= keepFrom) {
+        ev.deleteEvent();
+      }
+    });
+
     cal.getEvents(now, until).forEach(function (ev) {
       if (ev.getTag(TAG) && ev.getTag('key') !== 'test') {
         ev.deleteEvent();
