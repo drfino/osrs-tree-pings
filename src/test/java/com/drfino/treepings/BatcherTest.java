@@ -116,4 +116,31 @@ public class BatcherTest
 		assertEquals("Papaya x5, Yew x7", Batcher.readyNow(day(), at("2026-10-27T08:30")));
 		assertEquals("", Batcher.readyNow(day(), at("2026-11-20T08:30")));
 	}
+
+	@Test
+	public void smallDriftIsTheSameSchedule()
+	{
+		long now = at("2026-10-27T05:00");
+		List<Batch> sent = Batcher.build(day(), now, WINDOW, 1, LOOKAHEAD, AWAKE);
+		List<ReadyPatch> nudged = new ArrayList<>();
+		for (ReadyPatch p : day())
+		{
+			nudged.add(new ReadyPatch(p.getTypeKey(), p.getProduceName(), p.getLocation(),
+				p.getReadyAt() + 3 * 60, p.getGrowSeconds()));
+		}
+		List<Batch> next = Batcher.build(nudged, now + 3600, WINDOW, 1, LOOKAHEAD, AWAKE);
+		assertTrue(Batcher.sameSchedule(sent, next, now + 3600, 10 * 60));
+	}
+
+	@Test
+	public void realChangeIsANewSchedule()
+	{
+		long now = at("2026-10-27T05:00");
+		List<Batch> sent = Batcher.build(day(), now, WINDOW, 1, LOOKAHEAD, AWAKE);
+		List<ReadyPatch> moved = new ArrayList<>(day());
+		moved.add(new ReadyPatch("tree", "Magic", "Lumbridge", at("2026-10-27T15:00"), YEW));
+		List<Batch> next = Batcher.build(moved, now, WINDOW, 1, LOOKAHEAD, AWAKE);
+		assertTrue(!Batcher.sameSchedule(sent, next, now, 10 * 60));
+		assertTrue(!Batcher.sameSchedule(null, next, now, 10 * 60));
+	}
 }

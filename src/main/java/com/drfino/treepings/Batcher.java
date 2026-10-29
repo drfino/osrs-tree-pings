@@ -203,6 +203,43 @@ final class Batcher
 		return out;
 	}
 
+	/**
+	 * True when {@code next} would put the same dings on the calendar as {@code sent}: same
+	 * titles and patches, each within {@code toleranceSeconds}. Dings in {@code sent} that have
+	 * already gone off are ignored. RuneLite keeps refining its farming clock while you stand
+	 * near a tree, which nudges every prediction by a minute or two; that isn't worth a
+	 * calendar update (or a chat message).
+	 */
+	static boolean sameSchedule(List<Batch> sent, List<Batch> next, long unixNow, long toleranceSeconds)
+	{
+		if (sent == null)
+		{
+			return false;
+		}
+		List<Batch> upcoming = new ArrayList<>();
+		for (Batch b : sent)
+		{
+			if (b.readyAt > unixNow)
+			{
+				upcoming.add(b);
+			}
+		}
+		if (upcoming.size() != next.size())
+		{
+			return false;
+		}
+		for (int i = 0; i < next.size(); i++)
+		{
+			Batch a = upcoming.get(i), b = next.get(i);
+			if (!a.title.equals(b.title) || !a.detail.equals(b.detail)
+				|| Math.abs(a.readyAt - b.readyAt) > toleranceSeconds)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	/** One ding. Title lists the regular trees first, then anything riding along. */
 	private static Batch runBatch(List<Entry> run)
 	{

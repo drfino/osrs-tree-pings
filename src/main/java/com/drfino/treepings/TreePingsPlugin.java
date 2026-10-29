@@ -54,6 +54,8 @@ public class TreePingsPlugin extends Plugin
 {
 	private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 	private static final long LOOKAHEAD_SECONDS = 13L * 24 * 3600; // script keeps 14 days
+	/** Dings that only moved by this much don't need a calendar update. */
+	private static final long DRIFT_SECONDS = 10 * 60;
 	private static final long MAX_RETRY_SECONDS = 15 * 60;
 
 	@Inject
@@ -84,7 +86,7 @@ public class TreePingsPlugin extends Plugin
 	private OkHttpClient scriptClient;
 
 	private ScheduledFuture<?> pending;
-	private volatile String lastSentBatches;
+	private volatile List<Batch> lastSentBatches;
 	private volatile long retrySeconds;
 	private volatile boolean warnedBadSetup;
 	/** Time Tracking has changed since the last sync. */
@@ -330,8 +332,7 @@ public class TreePingsPlugin extends Plugin
 			config.groupWindow() * 60L, config.followOnCycles(), LOOKAHEAD_SECONDS, awake);
 		String readyNow = Batcher.readyNow(patches, Instant.now().getEpochSecond());
 
-		String batchesJson = gson.toJson(batches);
-		if (batchesJson.equals(lastSentBatches))
+		if (Batcher.sameSchedule(lastSentBatches, batches, Instant.now().getEpochSecond(), DRIFT_SECONDS))
 		{
 			lastSyncedPatches = patchesJson;
 			if (announce && config.chatMessages())
@@ -352,7 +353,7 @@ public class TreePingsPlugin extends Plugin
 		{
 			if (ok)
 			{
-				lastSentBatches = batchesJson;
+				lastSentBatches = batches;
 				lastSyncedPatches = patchesJson;
 				retrySeconds = 0;
 				warnedBadSetup = false;
