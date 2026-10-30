@@ -38,7 +38,8 @@ event at the time shown, and its notification uses the event title:
   calquats and hardwoods don't get events of their own. They're listed on the next
   regular-tree event instead.
 - **"(if replanted)"** events are for runs you do on mobile, where RuneLite can't see you
-  replant. They assume you replanted when the last notification went off.
+  replant. They assume you replanted when the last notification went off. Yews, palms,
+  calquats and hardwoods all get them; trees you only plant once (like a spirit tree) don't.
 - **The calendar keeps itself tidy.** Every update replaces upcoming Tree Pings events with
   the current plan, and events older than 12 hours are deleted.
 - **Events are private** and only ever written to the OSRS timers calendar. Your other
@@ -119,7 +120,7 @@ Most people only need the first three.
 | **Send test ding** | Tick it to put a test event on your calendar. Your phone gets its notification 2 minutes later. |
 | **Awake from / until** | Your waking hours (24-hour clock). Default 8 to 0 (8 AM to midnight). Anything finishing while you sleep waits for one morning event. Set both the same to get notifications around the clock. |
 | **Follow-on runs** | How many runs a day you do on mobile. Default 1. Set to 2 if you do two, or 0 if you only farm on PC. |
-| **Chat messages** | The "ready now / next ding" messages in chat. Problems always show, even if this is off. |
+| **Chat messages** | The "next ding" messages in chat. Problems always show, even if this is off. |
 | *Advanced* | Sync delay, group window and "only belled patches". You don't need to touch these. |
 
 ---

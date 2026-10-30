@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Turns predicted patches into a small number of dings, built around regular-tree runs.
@@ -23,8 +22,9 @@ import java.util.TreeMap;
  * <ul>
  * <li>Regular trees (yews, magics, etc.) set the schedule. Patches finishing within
  * {@code windowSeconds} of each other share one ding, timed for when the last is ready.
- * They also get follow-on dings, one grow cycle after each ding, for replants done on mobile
- * where RuneLite can't see them.</li>
+ * <li>Everything that gets replanted (regular, fruit, calquat and hardwood trees) also gets
+ * follow-on dings, one grow cycle after each ding, for replants done on mobile where RuneLite
+ * can't see them. Trees you plant once (spirit, crystal, redwood, celastrus) don't.</li>
  * <li>Slower crops (fruit trees, calquat, hardwoods, etc.) never ding on their own while a
  * regular-tree ding is coming: they're listed on the next one ("also Calquat x2"). Only when
  * no regular-tree ding follows do they get a ding of their own.</li>
@@ -34,6 +34,10 @@ import java.util.TreeMap;
  */
 final class Batcher
 {
+	/** Tree types players chop and replant every run; only these get follow-on dings. */
+	private static final Set<String> REPLANTED = new java.util.HashSet<>(
+		Arrays.asList("tree", "fruit_tree", "calquat", "hardwood_tree"));
+
 	/** The player's waking hours, in their local time zone. */
 	static final class Awake
 	{
@@ -107,7 +111,7 @@ final class Batcher
 	 * @param patches predicted patches; finish times may be in the past
 	 * @param unixNow current time, unix seconds
 	 * @param windowSeconds patches finishing within this span share a ding
-	 * @param followOnCycles how many follow-on dings regular trees get
+	 * @param followOnCycles how many follow-on dings each replanted tree gets
 	 * @param lookaheadSeconds ignore anything further out than this
 	 * @param awake the player's waking hours
 	 */
@@ -123,7 +127,7 @@ final class Batcher
 			long ding = awake.dingTime(p.getReadyAt());
 			entries.add(new Entry(p.getProduceName(), p.getLocation(), ding, false, ding != p.getReadyAt(), regularTree));
 
-			if (regularTree && p.getGrowSeconds() > 0)
+			if (REPLANTED.contains(p.getTypeKey()) && p.getGrowSeconds() > 0)
 			{
 				// Assume the player replants when the ding goes off, not when the tree finished.
 				long base = ding;
@@ -131,7 +135,7 @@ final class Batcher
 				{
 					long ready = base + p.getGrowSeconds();
 					long next = awake.dingTime(ready);
-					entries.add(new Entry(p.getProduceName(), p.getLocation(), next, true, next != ready, true));
+					entries.add(new Entry(p.getProduceName(), p.getLocation(), next, true, next != ready, regularTree));
 					base = next;
 				}
 			}
@@ -172,31 +176,24 @@ final class Batcher
 			out.add(runBatch(run));
 		}
 
-		// Slower crops with no regular-tree ding after them: one ding per crop per group window.
-		Map<String, List<Entry>> byProduce = new TreeMap<>();
+		// Slower crops with no regular-tree ding after them: one shared ding per group window.
+		List<Entry> cluster = new ArrayList<>();
 		for (Entry e : entries)
 		{
-			if (!used.contains(e))
+			if (used.contains(e))
 			{
-				byProduce.computeIfAbsent(e.produce, k -> new ArrayList<>()).add(e);
+				continue;
 			}
-		}
-		for (List<Entry> list : byProduce.values())
-		{
-			List<Entry> cluster = new ArrayList<>();
-			for (Entry e : list)
-			{
-				if (!cluster.isEmpty() && e.dingAt - cluster.get(0).dingAt > windowSeconds)
-				{
-					out.add(runBatch(cluster));
-					cluster = new ArrayList<>();
-				}
-				cluster.add(e);
-			}
-			if (!cluster.isEmpty())
+			if (!cluster.isEmpty() && e.dingAt - cluster.get(0).dingAt > windowSeconds)
 			{
 				out.add(runBatch(cluster));
+				cluster = new ArrayList<>();
 			}
+			cluster.add(e);
+		}
+		if (!cluster.isEmpty())
+		{
+			out.add(runBatch(cluster));
 		}
 
 		out.sort(Comparator.comparingLong((Batch b) -> b.readyAt).thenComparing(b -> b.key));
@@ -290,34 +287,6 @@ final class Batcher
 			out.add(crop.getKey() + (n > 1 ? " x" + n : ""));
 		}
 		return out;
-	}
-
-	/**
-	 * Crops whose finish time has passed, as RuneLite last saw them (e.g. "Yew x7, Calquat x2").
-	 * Patches finished more than two weeks ago are ignored as abandoned.
-	 */
-	static String readyNow(List<ReadyPatch> patches, long unixNow)
-	{
-		List<ReadyPatch> ready = new ArrayList<>();
-		for (ReadyPatch p : patches)
-		{
-			if (p.getReadyAt() <= unixNow && p.getReadyAt() > unixNow - 14L * 86400)
-			{
-				ready.add(p);
-			}
-		}
-		ready.sort(Comparator.comparingLong(ReadyPatch::getReadyAt));
-		Map<String, Integer> counts = new LinkedHashMap<>();
-		for (ReadyPatch p : ready)
-		{
-			counts.merge(p.getProduceName(), 1, Integer::sum);
-		}
-		List<String> out = new ArrayList<>();
-		for (Map.Entry<String, Integer> c : counts.entrySet())
-		{
-			out.add(c.getKey() + (c.getValue() > 1 ? " x" + c.getValue() : ""));
-		}
-		return String.join(", ", out);
 	}
 
 	private static String places(List<Entry> entries)

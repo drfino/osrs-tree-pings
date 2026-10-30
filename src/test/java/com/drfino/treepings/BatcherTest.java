@@ -69,7 +69,9 @@ public class BatcherTest
 		List<Batch> bs = Batcher.build(day(), at("2026-10-27T00:56"), WINDOW, 2, LOOKAHEAD, AWAKE);
 		assertEquals("Yew x7 ready (if replanted), also Calquat x2", only(bs, at("2026-10-27T14:40")).title);
 		assertEquals("Yew x7 ready (if replanted)", only(bs, at("2026-10-27T21:20")).title);
-		assertEquals(3, bs.size());
+		// Papayas and calquats replanted at their dings come back as next morning's runs.
+		assertEquals("Morning run: Papaya x5, Calquat x2 (if replanted)", only(bs, at("2026-10-28T08:00")).title);
+		assertEquals(5, bs.size());
 	}
 
 	@Test
@@ -97,7 +99,7 @@ public class BatcherTest
 	public void withoutRegularTreesEveryCropDings()
 	{
 		List<ReadyPatch> ps = Arrays.asList(new ReadyPatch("fruit_tree", "Palm", "Catherby", at("2026-10-27T15:00"), PALM));
-		List<Batch> bs = Batcher.build(ps, at("2026-10-27T12:00"), WINDOW, 2, LOOKAHEAD, AWAKE);
+		List<Batch> bs = Batcher.build(ps, at("2026-10-27T12:00"), WINDOW, 0, LOOKAHEAD, AWAKE);
 		assertEquals(1, bs.size());
 		assertEquals("Palm ready", bs.get(0).title);
 	}
@@ -111,10 +113,25 @@ public class BatcherTest
 	}
 
 	@Test
-	public void readyNowListsFinishedCrops()
+	public void fruitTreesAndCalquatsGetFollowOnsToo()
 	{
-		assertEquals("Papaya x5, Yew x7", Batcher.readyNow(day(), at("2026-10-27T08:30")));
-		assertEquals("", Batcher.readyNow(day(), at("2026-11-20T08:30")));
+		// After the 8 AM morning run, palms (16h) and calquats (21h20m) replanted then are
+		// ready overnight, so they come back as one shared ding the next morning.
+		List<ReadyPatch> ps = Arrays.asList(
+			new ReadyPatch("fruit_tree", "Palm", "Catherby", at("2026-10-27T03:31"), PALM),
+			new ReadyPatch("calquat", "Calquat", "Kastori", at("2026-10-27T06:11"), CALQUAT));
+		List<Batch> bs = Batcher.build(ps, at("2026-10-27T09:00"), WINDOW, 1, LOOKAHEAD, AWAKE);
+		assertEquals(1, bs.size());
+		assertEquals("Morning run: Palm, Calquat (if replanted)", only(bs, at("2026-10-28T08:00")).title);
+	}
+
+	@Test
+	public void plantOnceTreesGetNoFollowOns()
+	{
+		List<ReadyPatch> ps = Arrays.asList(
+			new ReadyPatch("spirit_tree", "Spirit Tree", "Farming Guild", at("2026-10-27T15:00"), PALM));
+		List<Batch> bs = Batcher.build(ps, at("2026-10-27T12:00"), WINDOW, 2, LOOKAHEAD, AWAKE);
+		assertEquals(1, bs.size());
 	}
 
 	@Test

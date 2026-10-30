@@ -82,7 +82,7 @@ public interface TreePingsConfig extends Config
 	@ConfigItem(
 		keyName = "followOnCycles",
 		name = "Follow-on runs",
-		description = "Regular-tree runs you do each day that RuneLite can't see (e.g. on mobile). Each gets an '(if replanted)' ding one grow cycle after the last. 1 = one mobile run a day.",
+		description = "Tree runs you do each day that RuneLite can't see (e.g. on mobile). Each tree gets an '(if replanted)' ding one grow cycle after the last. 1 = one mobile run a day.",
 		position = 6
 	)
 	default int followOnCycles()
@@ -93,7 +93,7 @@ public interface TreePingsConfig extends Config
 	@ConfigItem(
 		keyName = "chatMessages",
 		name = "Chat messages",
-		description = "When you log in or your calendar updates, say what's ready now and when the next ding is. Problems are always shown, even with this off.",
+		description = "When you log in or your calendar updates, say when the next ding is. Problems are always shown, even with this off.",
 		position = 7
 	)
 	default boolean chatMessages()

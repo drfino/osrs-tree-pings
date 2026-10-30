@@ -330,14 +330,13 @@ public class TreePingsPlugin extends Plugin
 		Batcher.Awake awake = new Batcher.Awake(ZoneId.systemDefault(), config.awakeFrom(), config.awakeUntil());
 		List<Batch> batches = Batcher.build(patches, Instant.now().getEpochSecond(),
 			config.groupWindow() * 60L, config.followOnCycles(), LOOKAHEAD_SECONDS, awake);
-		String readyNow = Batcher.readyNow(patches, Instant.now().getEpochSecond());
 
 		if (Batcher.sameSchedule(lastSentBatches, batches, Instant.now().getEpochSecond(), DRIFT_SECONDS))
 		{
 			lastSyncedPatches = patchesJson;
 			if (announce && config.chatMessages())
 			{
-				chat(syncSummary(readyNow, batches, false));
+				chat(syncSummary(batches, false));
 			}
 			announce = false;
 			return CompletableFuture.completedFuture(true);
@@ -359,7 +358,7 @@ public class TreePingsPlugin extends Plugin
 				warnedBadSetup = false;
 				if (config.chatMessages())
 				{
-					chat(syncSummary(readyNow, batches, true));
+					chat(syncSummary(batches, true));
 				}
 				announce = false;
 			}
@@ -475,17 +474,17 @@ public class TreePingsPlugin extends Plugin
 	private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("h:mm a");
 	private static final DateTimeFormatter DAY_TIME = DateTimeFormatter.ofPattern("EEE h:mm a");
 
-	/** e.g. "Tree Pings: calendar updated. Ready now: Yew x7. Next ding: Yew x7 ready (if replanted) at 10:00 PM." */
-	static String syncSummary(String readyNow, List<Batch> batches, boolean updated)
+	/**
+	 * e.g. "Tree Pings: calendar updated. Next ding: Yew x7 ready (if replanted) at 10:00 PM."
+	 * There's deliberately no "ready now": after a mobile run RuneLite still thinks the
+	 * replanted trees are finished, so it would list trees that aren't ready.
+	 */
+	static String syncSummary(List<Batch> batches, boolean updated)
 	{
 		StringBuilder sb = new StringBuilder("Tree Pings: ");
 		if (updated)
 		{
 			sb.append("calendar updated. ");
-		}
-		if (!readyNow.isEmpty())
-		{
-			sb.append("Ready now: ").append(readyNow).append(". ");
 		}
 		if (batches.isEmpty())
 		{
