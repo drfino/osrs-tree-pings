@@ -58,7 +58,7 @@ public interface TreePingsConfig extends Config
 	@ConfigItem(
 		keyName = "awakeFrom",
 		name = "Awake from (hour)",
-		description = "Hour you wake up, 0-23. Anything that finishes while you sleep goes into one 'Morning run' ding at this hour.",
+		description = "Hour you wake up, 0-23. Anything that finishes while you sleep waits for one ding at this hour.",
 		position = 4
 	)
 	default int awakeFrom()

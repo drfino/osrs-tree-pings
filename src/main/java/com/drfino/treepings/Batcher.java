@@ -33,7 +33,7 @@ import java.util.Set;
  * regular-tree ding is coming: they're listed on the next one ("also Calquat x2"). Only when
  * no regular-tree ding follows do they get a ding of their own.</li>
  * <li>Anything finishing outside the player's awake hours waits until they wake up; a ding
- * that includes such an entry is labelled "Morning run".</li>
+ * that includes such an entry is the morning ding.</li>
  * </ul>
  */
 final class Batcher
@@ -117,17 +117,15 @@ final class Batcher
 		final String location;
 		final long dingAt;
 		final boolean followOn;
-		final boolean heldOvernight;
 		final boolean anchor;
 
-		Entry(String produce, String location, long dingAt, boolean followOn, boolean heldOvernight, boolean anchor)
+		Entry(String produce, String location, long dingAt, boolean followOn, boolean anchor)
 		{
 			this.anchor = anchor;
 			this.produce = produce;
 			this.location = location;
 			this.dingAt = dingAt;
 			this.followOn = followOn;
-			this.heldOvernight = heldOvernight;
 		}
 	}
 
@@ -153,7 +151,7 @@ final class Batcher
 		{
 			boolean regularTree = "tree".equals(p.getTypeKey());
 			long ding = awake.dingTime(p.getReadyAt());
-			entries.add(new Entry(p.getProduceName(), p.getLocation(), ding, false, ding != p.getReadyAt(), regularTree));
+			entries.add(new Entry(p.getProduceName(), p.getLocation(), ding, false, regularTree));
 
 			if (followOnCycles > 0 && REPLANTED.contains(p.getTypeKey()) && p.getGrowSeconds() > 0
 				&& p.getReadyAt() > unixNow - ABANDONED_SECONDS)
@@ -186,7 +184,7 @@ final class Batcher
 					{
 						break;
 					}
-					entries.add(new Entry(p.getProduceName(), p.getLocation(), next, true, next != ready, regularTree));
+					entries.add(new Entry(p.getProduceName(), p.getLocation(), next, true, regularTree));
 					base = next;
 				}
 			}
@@ -301,21 +299,11 @@ final class Batcher
 			(e.anchor || !hasAnchor ? lead : riders).computeIfAbsent(e.produce, k -> new ArrayList<>()).add(e);
 		}
 
-		// No counts: after mobile runs RuneLite's view is often stale, and players know how many
-		// patches they have. The ding only needs to say which run it is.
-		boolean morning = lead.values().stream().flatMap(List::stream).anyMatch(e -> e.heldOvernight);
-		String title;
-		if (morning)
-		{
-			List<String> all = new ArrayList<>(lead.keySet());
-			all.addAll(riders.keySet());
-			title = ICON + "Morning run: " + String.join(", ", all);
-		}
-		else
-		{
-			title = ICON + String.join(", ", lead.keySet()) + " run"
-				+ (riders.isEmpty() ? "" : ", also " + String.join(", ", riders.keySet()));
-		}
+		// Just the trees, regular trees first: the calendar already shows the time, and after
+		// mobile runs RuneLite's patch counts are often stale anyway.
+		List<String> crops = new ArrayList<>(lead.keySet());
+		crops.addAll(riders.keySet());
+		String title = ICON + String.join(", ", crops);
 
 		List<String> details = new ArrayList<>();
 		for (Map<String, List<Entry>> group : Arrays.asList(lead, riders))

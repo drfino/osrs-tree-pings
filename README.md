@@ -21,7 +21,7 @@ shows an ordinary Google Calendar notification, just like a meeting reminder.
    Time Tracking plugin already keeps. It doesn't touch the game.
 2. **When your run is done, it updates your calendar.** A few minutes after your last patch
    (or right away when you log out), chat says:
-   > Tree Pings: calendar updated. Next ding: 🌳 Yew run at 2:40 PM.
+   > Tree Pings: calendar updated. Next ding: 🌳 Yew at 2:40 PM.
 3. **At that time, your phone shows a Google Calendar notification.** It works the same
    whether your PC is on, off, or asleep, because the events now live in Google Calendar.
    Tap the notification to open the event and see which patches it's for.
@@ -33,8 +33,8 @@ event at the time shown, and its notification uses the event title:
 
 | Time | Calendar event (and notification) | Inside the event |
 | --- | --- | --- |
-| 8:00 AM | **🌳 Morning run: Yew, Palm, Calquat** | Yew: Falador, Lumbridge, Varrock…<br>Palm: Brimhaven, Catherby…<br>Calquat: Kastori, Tai Bwo Wannai |
-| 2:40 PM | **🌳 Yew run** | Yew (if replanted): Falador, Lumbridge, Varrock… |
+| 8:00 AM | **🌳 Yew, Palm, Calquat** | Yew: Falador, Lumbridge, Varrock…<br>Palm: Brimhaven, Catherby…<br>Calquat: Kastori, Tai Bwo Wannai |
+| 2:40 PM | **🌳 Yew** | Yew (if replanted): Falador, Lumbridge, Varrock… |
 
 - **Your regular trees (yews, magics, etc.) decide when events are created.** Fruit trees,
   calquats and hardwoods don't get events of their own. They're listed on the next
@@ -44,8 +44,9 @@ event at the time shown, and its notification uses the event title:
   **Follow-on runs**). So mobile runs, even several days of them, still get reminders. When
   RuneLite sees a patch again on PC, its exact timer takes over. Trees you only plant once
   (like a spirit tree) aren't assumed.
-- **No patch counts in titles.** After mobile runs RuneLite can't know which patches you did,
-  so titles just say which run it is.
+- **Titles are just the trees.** The calendar already shows the time, and after mobile runs
+  RuneLite can't know which patches you did, so there are no counts. Tap an event for the
+  patch list.
 - **The calendar keeps itself tidy.** Every update replaces upcoming Tree Pings events with
   the current plan, and events older than 12 hours are deleted.
 - **Events are private** and only ever written to the OSRS timers calendar. Your other
