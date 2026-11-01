@@ -475,7 +475,7 @@ public class TreePingsPlugin extends Plugin
 	private static final DateTimeFormatter DAY_TIME = DateTimeFormatter.ofPattern("EEE h:mm a");
 
 	/**
-	 * e.g. "Tree Pings: calendar updated. Next ding: Yew x7 ready (if replanted) at 10:00 PM."
+	 * e.g. "Tree Pings: calendar updated. Next ding: Yew run at 2:40 PM."
 	 * There's deliberately no "ready now": after a mobile run RuneLite still thinks the
 	 * replanted trees are finished, so it would list trees that aren't ready.
 	 */

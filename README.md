@@ -10,16 +10,18 @@ shows an ordinary Google Calendar notification, just like a meeting reminder.
 - The events go on their own private calendar, **OSRS timers**, separate from your real one.
 - No 3 AM notifications. Anything that finishes overnight waits for one morning event.
 - About 2 events a day, not one per tree.
+- **Works with mobile runs.** Play on mobile for days and the reminders keep coming.
+  Log in on PC now and then and they snap back to your exact timers.
 
 ---
 
 ## How it works
 
-1. **You farm like normal, with RuneLite open.** Tree Pings reads the timers RuneLite's
+1. **You farm like normal, on PC or mobile.** On PC, Tree Pings reads the timers RuneLite's
    Time Tracking plugin already keeps. It doesn't touch the game.
 2. **When your run is done, it updates your calendar.** A few minutes after your last patch
    (or right away when you log out), chat says:
-   > Tree Pings: calendar updated. Next ding: Yew x7 ready at 2:40 PM.
+   > Tree Pings: calendar updated. Next ding: 🌳 Yew run at 2:40 PM.
 3. **At that time, your phone shows a Google Calendar notification.** It works the same
    whether your PC is on, off, or asleep, because the events now live in Google Calendar.
    Tap the notification to open the event and see which patches it's for.
@@ -31,15 +33,19 @@ event at the time shown, and its notification uses the event title:
 
 | Time | Calendar event (and notification) | Inside the event |
 | --- | --- | --- |
-| 8:00 AM | **Morning run: Yew x7, Palm x5, Calquat x2** | Yew: Falador, Lumbridge, Varrock…<br>Palm: Brimhaven, Catherby…<br>Calquat: Kastori, Tai Bwo Wannai |
-| 2:40 PM | **Yew x7 ready (if replanted)** | Yew: Falador, Lumbridge, Varrock… |
+| 8:00 AM | **🌳 Morning run: Yew, Palm, Calquat** | Yew: Falador, Lumbridge, Varrock…<br>Palm: Brimhaven, Catherby…<br>Calquat: Kastori, Tai Bwo Wannai |
+| 2:40 PM | **🌳 Yew run** | Yew (if replanted): Falador, Lumbridge, Varrock… |
 
 - **Your regular trees (yews, magics, etc.) decide when events are created.** Fruit trees,
   calquats and hardwoods don't get events of their own. They're listed on the next
   regular-tree event instead.
-- **"(if replanted)"** events are for runs you do on mobile, where RuneLite can't see you
-  replant. They assume you replanted when the last notification went off. Yews, palms,
-  calquats and hardwoods all get them; trees you only plant once (like a spirit tree) don't.
+- **It keeps a daily rhythm going for the next 5 days.** It assumes you replant at every
+  notification: a morning run, plus one more run a day one grow cycle later (change this with
+  **Follow-on runs**). So mobile runs, even several days of them, still get reminders. When
+  RuneLite sees a patch again on PC, its exact timer takes over. Trees you only plant once
+  (like a spirit tree) aren't assumed.
+- **No patch counts in titles.** After mobile runs RuneLite can't know which patches you did,
+  so titles just say which run it is.
 - **The calendar keeps itself tidy.** Every update replaces upcoming Tree Pings events with
   the current plan, and events older than 12 hours are deleted.
 - **Events are private** and only ever written to the OSRS timers calendar. Your other
@@ -104,7 +110,7 @@ This little script lives in **your own** Google account. It's the thing that wri
 
 - **When you log in,** chat tells you what's ready right now and when your next notification is.
 - **You can close RuneLite any time** after a run. The events are already on your calendar.
-- **Did a run on mobile?** Nothing to do. The "(if replanted)" events already cover it.
+- **Did a run on mobile?** Nothing to do. The daily rhythm already covers it, for days at a time.
   Next time you play on PC, everything updates.
 
 ---
@@ -119,7 +125,7 @@ Most people only need the first three.
 | **Token** | The password from setup step 1. |
 | **Send test ding** | Tick it to put a test event on your calendar. Your phone gets its notification 2 minutes later. |
 | **Awake from / until** | Your waking hours (24-hour clock). Default 8 to 0 (8 AM to midnight). Anything finishing while you sleep waits for one morning event. Set both the same to get notifications around the clock. |
-| **Follow-on runs** | How many runs a day you do on mobile. Default 1. Set to 2 if you do two, or 0 if you only farm on PC. |
+| **Follow-on runs** | Runs a day after your morning run. Default 1 (morning + afternoon). Set 2 for three runs a day, or 0 if you only farm on PC and want reminders only for what RuneLite has seen. |
 | **Chat messages** | The "next ding" messages in chat. Problems always show, even if this is off. |
 | *Advanced* | Sync delay, group window and "only belled patches". You don't need to touch these. |
 
@@ -142,7 +148,7 @@ Tree Pings tells you in chat when something goes wrong:
 Go back through setup step 2.
 
 **Good to know:**
-- RuneLite only knows what it last saw. If you skip a mobile run, its "(if replanted)" event still notifies you.
+- RuneLite only knows what it last saw. If you skip a run, the rhythm assumes you didn't and keeps reminding you on schedule; log in on PC to resync.
 - If a tree gets diseased while you're away, you still get its notification at the normal time.
 - Use one RuneScape account per calendar. Each account would overwrite the other's events.
 - You can rename the calendar or change its colour. Don't delete it.

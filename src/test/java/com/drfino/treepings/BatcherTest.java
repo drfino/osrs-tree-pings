@@ -19,6 +19,7 @@ public class BatcherTest
 	private static final long WINDOW = 45 * 60;
 	private static final long LOOKAHEAD = 13L * 86400;
 	private static final Batcher.Awake AWAKE = new Batcher.Awake(NY, 8, 0);
+	private static final String ICON = "\uD83C\uDF33 ";
 
 	private static long at(String time)
 	{
@@ -60,18 +61,17 @@ public class BatcherTest
 	public void overnightFinishesBecomeOneMorningRun()
 	{
 		List<Batch> bs = Batcher.build(day(), at("2026-10-27T00:56"), WINDOW, 2, LOOKAHEAD, AWAKE);
-		assertEquals("Morning run: Yew x7, Papaya x5", only(bs, at("2026-10-27T08:00")).title);
+		assertEquals(ICON + "Morning run: Yew, Papaya", only(bs, at("2026-10-27T08:00")).title);
 	}
 
 	@Test
 	public void slowCropsRideAlongOnTheNextTreeDing()
 	{
 		List<Batch> bs = Batcher.build(day(), at("2026-10-27T00:56"), WINDOW, 2, LOOKAHEAD, AWAKE);
-		assertEquals("Yew x7 ready (if replanted), also Calquat x2", only(bs, at("2026-10-27T14:40")).title);
-		assertEquals("Yew x7 ready (if replanted)", only(bs, at("2026-10-27T21:20")).title);
-		// Papayas and calquats replanted at their dings come back as next morning's runs.
-		assertEquals("Morning run: Papaya x5, Calquat x2 (if replanted)", only(bs, at("2026-10-28T08:00")).title);
-		assertEquals(5, bs.size());
+		assertEquals(ICON + "Yew run, also Calquat", only(bs, at("2026-10-27T14:40")).title);
+		assertEquals(ICON + "Yew run", only(bs, at("2026-10-27T21:20")).title);
+		// Papayas and calquats replanted at their dings come back on the next morning run.
+		assertEquals(ICON + "Morning run: Yew, Papaya, Calquat", only(bs, at("2026-10-28T08:00")).title);
 	}
 
 	@Test
@@ -91,7 +91,7 @@ public class BatcherTest
 			new ReadyPatch("calquat", "Calquat", "Kastori", at("2026-10-27T15:30"), CALQUAT));
 		List<Batch> bs = Batcher.build(ps, at("2026-10-27T12:00"), WINDOW, 0, LOOKAHEAD, AWAKE);
 		assertEquals(1, bs.size());
-		assertEquals("Yew ready, also Calquat", bs.get(0).title);
+		assertEquals(ICON + "Yew run, also Calquat", bs.get(0).title);
 		assertEquals(at("2026-10-27T15:30"), bs.get(0).readyAt);
 	}
 
@@ -101,7 +101,7 @@ public class BatcherTest
 		List<ReadyPatch> ps = Arrays.asList(new ReadyPatch("fruit_tree", "Palm", "Catherby", at("2026-10-27T15:00"), PALM));
 		List<Batch> bs = Batcher.build(ps, at("2026-10-27T12:00"), WINDOW, 0, LOOKAHEAD, AWAKE);
 		assertEquals(1, bs.size());
-		assertEquals("Palm ready", bs.get(0).title);
+		assertEquals(ICON + "Palm run", bs.get(0).title);
 	}
 
 	@Test
@@ -121,8 +121,11 @@ public class BatcherTest
 			new ReadyPatch("fruit_tree", "Palm", "Catherby", at("2026-10-27T03:31"), PALM),
 			new ReadyPatch("calquat", "Calquat", "Kastori", at("2026-10-27T06:11"), CALQUAT));
 		List<Batch> bs = Batcher.build(ps, at("2026-10-27T09:00"), WINDOW, 1, LOOKAHEAD, AWAKE);
-		assertEquals(1, bs.size());
-		assertEquals("Morning run: Palm, Calquat (if replanted)", only(bs, at("2026-10-28T08:00")).title);
+		assertEquals(ICON + "Morning run: Palm, Calquat", only(bs, at("2026-10-28T08:00")).title);
+		for (Batch b : bs)
+		{
+			assertEquals(8, java.time.Instant.ofEpochSecond(b.readyAt).atZone(NY).getHour());
+		}
 	}
 
 	@Test
@@ -159,5 +162,34 @@ public class BatcherTest
 		List<Batch> next = Batcher.build(moved, now, WINDOW, 1, LOOKAHEAD, AWAKE);
 		assertTrue(!Batcher.sameSchedule(sent, next, now, 10 * 60));
 		assertTrue(!Batcher.sameSchedule(null, next, now, 10 * 60));
+	}
+
+	@Test
+	public void rhythmCoversDaysOfMobileOnlyRuns()
+	{
+		// RuneLite last saw the yews three days ago. With one extra run a day, the calendar
+		// still gets a morning and an afternoon yew run every day for the next few days.
+		List<ReadyPatch> ps = new ArrayList<>();
+		for (String place : Arrays.asList("Falador", "Lumbridge", "Varrock"))
+		{
+			ps.add(new ReadyPatch("tree", "Yew", place, at("2026-10-29T06:51"), YEW));
+		}
+		long now = at("2026-11-01T10:52");
+		List<Batch> bs = Batcher.build(ps, now, WINDOW, 1, LOOKAHEAD, AWAKE);
+		assertEquals(ICON + "Yew run", only(bs, at("2026-11-01T14:40")).title);
+		assertEquals(ICON + "Morning run: Yew", only(bs, at("2026-11-02T08:00")).title);
+		assertEquals(ICON + "Yew run", only(bs, at("2026-11-02T14:40")).title);
+		for (Batch b : bs)
+		{
+			assertTrue(b.title, b.readyAt <= now + Batcher.RHYTHM_SECONDS);
+		}
+		assertEquals(10, bs.size()); // Nov 1 afternoon, then Nov 2-5 morning + afternoon, then Nov 6 morning
+	}
+
+	@Test
+	public void noAssumedRunsWhenFollowOnsAreOff()
+	{
+		List<ReadyPatch> ps = Arrays.asList(new ReadyPatch("tree", "Yew", "Falador", at("2026-10-29T06:51"), YEW));
+		assertEquals(0, Batcher.build(ps, at("2026-11-01T10:52"), WINDOW, 0, LOOKAHEAD, AWAKE).size());
 	}
 }

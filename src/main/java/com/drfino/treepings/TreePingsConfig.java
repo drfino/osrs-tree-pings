@@ -82,7 +82,7 @@ public interface TreePingsConfig extends Config
 	@ConfigItem(
 		keyName = "followOnCycles",
 		name = "Follow-on runs",
-		description = "Tree runs you do each day that RuneLite can't see (e.g. on mobile). Each tree gets an '(if replanted)' ding one grow cycle after the last. 1 = one mobile run a day.",
+		description = "Runs a day after your morning run. Tree Pings assumes you replant at every ding and keeps this rhythm going for 5 days, so mobile runs still get dings. 1 = morning + afternoon. 0 = only ding for what RuneLite has seen.",
 		position = 6
 	)
 	default int followOnCycles()

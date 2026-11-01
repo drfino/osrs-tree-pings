@@ -2,6 +2,7 @@ package com.drfino.treepings;
 
 import com.drfino.treepings.farming.ReadyPatch;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -22,9 +23,12 @@ import java.util.Set;
  * <ul>
  * <li>Regular trees (yews, magics, etc.) set the schedule. Patches finishing within
  * {@code windowSeconds} of each other share one ding, timed for when the last is ready.
- * <li>Everything that gets replanted (regular, fruit, calquat and hardwood trees) also gets
- * follow-on dings, one grow cycle after each ding, for replants done on mobile where RuneLite
- * can't see them. Trees you plant once (spirit, crystal, redwood, celastrus) don't.</li>
+ * <li>Everything that gets replanted (regular, fruit, calquat and hardwood trees) keeps a daily
+ * rhythm going for {@link #RHYTHM_SECONDS}: it assumes you replant at every ding, so runs done
+ * on mobile (where RuneLite can't see them) still get dings. Each day has a morning run plus
+ * up to {@code followOnCycles} more runs, one grow cycle apart. When RuneLite sees a patch
+ * again, its real timer takes over. Trees you plant once (spirit, crystal, redwood,
+ * celastrus) don't get a rhythm.</li>
  * <li>Slower crops (fruit trees, calquat, hardwoods, etc.) never ding on their own while a
  * regular-tree ding is coming: they're listed on the next one ("also Calquat x2"). Only when
  * no regular-tree ding follows do they get a ding of their own.</li>
@@ -37,6 +41,12 @@ final class Batcher
 	/** Tree types players chop and replant every run; only these get follow-on dings. */
 	private static final Set<String> REPLANTED = new java.util.HashSet<>(
 		Arrays.asList("tree", "fruit_tree", "calquat", "hardwood_tree"));
+
+	/** How far ahead the assumed daily rhythm is scheduled, so a few mobile-only days are covered. */
+	static final long RHYTHM_SECONDS = 5L * 86400;
+
+	/** One emoji so dings are easy to spot in a busy calendar. */
+	private static final String ICON = "\uD83C\uDF33 ";
 
 	/** The player's waking hours, in their local time zone. */
 	static final class Awake
@@ -81,6 +91,18 @@ final class Batcher
 			}
 			return wake.toEpochSecond();
 		}
+
+		/** The day a time belongs to. Days start at wake-up, so a 1 AM ding is still the night before. */
+		LocalDate day(long t)
+		{
+			return Instant.ofEpochSecond(t).atZone(zone).minusHours(fromHour).toLocalDate();
+		}
+
+		/** Wake-up time on the day after {@code t}'s day. */
+		long nextMorning(long t)
+		{
+			return day(t).plusDays(1).atTime(fromHour, 0).atZone(zone).toEpochSecond();
+		}
 	}
 
 	private static final class Entry
@@ -111,7 +133,7 @@ final class Batcher
 	 * @param patches predicted patches; finish times may be in the past
 	 * @param unixNow current time, unix seconds
 	 * @param windowSeconds patches finishing within this span share a ding
-	 * @param followOnCycles how many follow-on dings each replanted tree gets
+	 * @param followOnCycles runs per day after the morning run (0 = no assumed replants at all)
 	 * @param lookaheadSeconds ignore anything further out than this
 	 * @param awake the player's waking hours
 	 */
@@ -127,14 +149,33 @@ final class Batcher
 			long ding = awake.dingTime(p.getReadyAt());
 			entries.add(new Entry(p.getProduceName(), p.getLocation(), ding, false, ding != p.getReadyAt(), regularTree));
 
-			if (REPLANTED.contains(p.getTypeKey()) && p.getGrowSeconds() > 0)
+			if (followOnCycles > 0 && REPLANTED.contains(p.getTypeKey()) && p.getGrowSeconds() > 0)
 			{
-				// Assume the player replants when the ding goes off, not when the tree finished.
+				// Assume the player replants at every ding, keeping a daily rhythm: a morning run
+				// plus up to followOnCycles more runs that day, then the next morning.
+				long stop = Math.min(horizon, unixNow + RHYTHM_SECONDS);
 				long base = ding;
-				for (int k = 1; k <= followOnCycles; k++)
+				int runsToday = 0;
+				while (true)
 				{
 					long ready = base + p.getGrowSeconds();
 					long next = awake.dingTime(ready);
+					if (awake.day(next).equals(awake.day(base)))
+					{
+						if (++runsToday > followOnCycles)
+						{
+							next = awake.nextMorning(base);
+							runsToday = 0;
+						}
+					}
+					else
+					{
+						runsToday = 0;
+					}
+					if (next > stop)
+					{
+						break;
+					}
 					entries.add(new Entry(p.getProduceName(), p.getLocation(), next, true, next != ready, regularTree));
 					base = next;
 				}
@@ -250,19 +291,20 @@ final class Batcher
 			(e.anchor || !hasAnchor ? lead : riders).computeIfAbsent(e.produce, k -> new ArrayList<>()).add(e);
 		}
 
-		boolean leadAllFollowOn = lead.values().stream().flatMap(List::stream).allMatch(e -> e.followOn);
+		// No counts: after mobile runs RuneLite's view is often stale, and players know how many
+		// patches they have. The ding only needs to say which run it is.
 		boolean morning = lead.values().stream().flatMap(List::stream).anyMatch(e -> e.heldOvernight);
 		String title;
 		if (morning)
 		{
-			List<String> all = counts(lead);
-			all.addAll(counts(riders));
-			title = "Morning run: " + String.join(", ", all) + (leadAllFollowOn ? " (if replanted)" : "");
+			List<String> all = new ArrayList<>(lead.keySet());
+			all.addAll(riders.keySet());
+			title = ICON + "Morning run: " + String.join(", ", all);
 		}
 		else
 		{
-			title = String.join(", ", counts(lead)) + " ready" + (leadAllFollowOn ? " (if replanted)" : "")
-				+ (riders.isEmpty() ? "" : ", also " + String.join(", ", counts(riders)));
+			title = ICON + String.join(", ", lead.keySet()) + " run"
+				+ (riders.isEmpty() ? "" : ", also " + String.join(", ", riders.keySet()));
 		}
 
 		List<String> details = new ArrayList<>();
@@ -276,17 +318,6 @@ final class Batcher
 		}
 		String key = slug(lead.keySet().iterator().next()) + "-" + readyAt;
 		return new Batch(key, title, readyAt, String.join("\n", details));
-	}
-
-	private static List<String> counts(Map<String, List<Entry>> byProduce)
-	{
-		List<String> out = new ArrayList<>();
-		for (Map.Entry<String, List<Entry>> crop : byProduce.entrySet())
-		{
-			int n = crop.getValue().size();
-			out.add(crop.getKey() + (n > 1 ? " x" + n : ""));
-		}
-		return out;
 	}
 
 	private static String places(List<Entry> entries)
