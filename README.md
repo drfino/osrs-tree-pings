@@ -149,6 +149,7 @@ Go back through setup step 2.
 
 **Good to know:**
 - RuneLite only knows what it last saw. If you skip a run, the rhythm assumes you didn't and keeps reminding you on schedule; log in on PC to resync.
+- A patch RuneLite hasn't seen finish for 2 weeks is treated as abandoned and gets no more reminders until you visit it again.
 - If a tree gets diseased while you're away, you still get its notification at the normal time.
 - Use one RuneScape account per calendar. Each account would overwrite the other's events.
 - You can rename the calendar or change its colour. Don't delete it.

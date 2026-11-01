@@ -45,6 +45,12 @@ final class Batcher
 	/** How far ahead the assumed daily rhythm is scheduled, so a few mobile-only days are covered. */
 	static final long RHYTHM_SECONDS = 5L * 86400;
 
+	/**
+	 * Patches RuneLite last saw finishing longer ago than this are treated as abandoned and get
+	 * no rhythm; otherwise a patch you stopped farming would join every morning run forever.
+	 */
+	static final long ABANDONED_SECONDS = 14L * 86400;
+
 	/** One emoji so dings are easy to spot in a busy calendar. */
 	private static final String ICON = "\uD83C\uDF33 ";
 
@@ -149,13 +155,17 @@ final class Batcher
 			long ding = awake.dingTime(p.getReadyAt());
 			entries.add(new Entry(p.getProduceName(), p.getLocation(), ding, false, ding != p.getReadyAt(), regularTree));
 
-			if (followOnCycles > 0 && REPLANTED.contains(p.getTypeKey()) && p.getGrowSeconds() > 0)
+			if (followOnCycles > 0 && REPLANTED.contains(p.getTypeKey()) && p.getGrowSeconds() > 0
+				&& p.getReadyAt() > unixNow - ABANDONED_SECONDS)
 			{
 				// Assume the player replants at every ding, keeping a daily rhythm: a morning run
 				// plus up to followOnCycles more runs that day, then the next morning.
 				long stop = Math.min(horizon, unixNow + RHYTHM_SECONDS);
 				long base = ding;
-				int runsToday = 0;
+				// The run that planted this tree counts as one of the day's runs, so a PC run in
+				// the morning plus its afternoon ding doesn't also get an evening ding.
+				long planted = p.getReadyAt() - p.getGrowSeconds();
+				int runsToday = awake.day(planted).equals(awake.day(ding)) ? 1 : 0;
 				while (true)
 				{
 					long ready = base + p.getGrowSeconds();

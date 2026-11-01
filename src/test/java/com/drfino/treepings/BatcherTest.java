@@ -192,4 +192,23 @@ public class BatcherTest
 		List<ReadyPatch> ps = Arrays.asList(new ReadyPatch("tree", "Yew", "Falador", at("2026-10-29T06:51"), YEW));
 		assertEquals(0, Batcher.build(ps, at("2026-11-01T10:52"), WINDOW, 0, LOOKAHEAD, AWAKE).size());
 	}
+
+	@Test
+	public void plantingRunCountsAsOneOfTheDaysRuns()
+	{
+		// A full PC run at 8:30 makes the 15:10 ding that day's second run. With one run after
+		// the morning, there's no third ding that evening: the next one is the morning.
+		List<ReadyPatch> ps = Arrays.asList(new ReadyPatch("tree", "Yew", "Falador", at("2026-11-02T15:10"), YEW));
+		List<Batch> bs = Batcher.build(ps, at("2026-11-02T08:35"), WINDOW, 1, LOOKAHEAD, AWAKE);
+		assertEquals(at("2026-11-02T15:10"), bs.get(0).readyAt);
+		assertEquals(at("2026-11-03T08:00"), bs.get(1).readyAt);
+	}
+
+	@Test
+	public void abandonedPatchesGetNoRhythm()
+	{
+		// Last seen three weeks ago: the player stopped farming it, so it shouldn't join every run.
+		List<ReadyPatch> ps = Arrays.asList(new ReadyPatch("tree", "Maple", "Varrock", at("2026-10-10T12:00"), YEW));
+		assertEquals(0, Batcher.build(ps, at("2026-11-01T10:00"), WINDOW, 1, LOOKAHEAD, AWAKE).size());
+	}
 }

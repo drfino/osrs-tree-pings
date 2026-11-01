@@ -128,7 +128,9 @@ function syncBatches_(batches) {
         if (match.ev.getDescription() !== w.detail) {
           match.ev.setDescription(w.detail);
         }
-        match.ev.setTag('key', w.key);
+        if (match.ev.getTag('key') !== w.key) {
+          match.ev.setTag('key', w.key); // each write is a Calendar call; skip unchanged ones
+        }
       } else {
         todo.push(w);
       }
