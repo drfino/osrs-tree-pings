@@ -23,12 +23,12 @@ import java.util.Set;
  * <ul>
  * <li>Regular trees (yews, magics, etc.) set the schedule. Patches finishing within
  * {@code windowSeconds} of each other share one ding, timed for when the last is ready.
- * <li>Everything that gets replanted (regular, fruit, calquat and hardwood trees) keeps a daily
+ * <li>Everything that gets replanted (regular, fruit, calquat, celastrus and hardwood trees) keeps a daily
  * rhythm going for {@link #RHYTHM_SECONDS}: it assumes you replant at every ding, so runs done
  * on mobile (where RuneLite can't see them) still get dings. Each day has a morning run plus
  * up to {@code followOnCycles} more runs, one grow cycle apart. When RuneLite sees a patch
- * again, its real timer takes over. Trees you plant once (spirit, crystal, redwood,
- * celastrus) don't get a rhythm.</li>
+ * again, its real timer takes over. Trees you plant once (spirit, crystal, redwood)
+ * don't get a rhythm.</li>
  * <li>Slower crops (fruit trees, calquat, hardwoods, etc.) never ding on their own while a
  * regular-tree ding is coming: they're listed on the next one ("also Calquat x2"). Only when
  * no regular-tree ding follows do they get a ding of their own.</li>
@@ -40,7 +40,7 @@ final class Batcher
 {
 	/** Tree types players chop and replant every run; only these get follow-on dings. */
 	private static final Set<String> REPLANTED = new java.util.HashSet<>(
-		Arrays.asList("tree", "fruit_tree", "calquat", "hardwood_tree"));
+		Arrays.asList("tree", "fruit_tree", "calquat", "celastrus", "hardwood_tree"));
 
 	/** How far ahead the assumed daily rhythm is scheduled, so a few mobile-only days are covered. */
 	static final long RHYTHM_SECONDS = 5L * 86400;

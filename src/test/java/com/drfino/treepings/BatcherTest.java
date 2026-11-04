@@ -138,6 +138,20 @@ public class BatcherTest
 	}
 
 	@Test
+	public void celastrusGetsFollowOnsForMobileReplants()
+	{
+		// A celastrus (13h20m) planted on the 8 AM PC run dings that evening, then keeps
+		// dinging after replants RuneLite never sees, like the other replanted trees.
+		long celastrus = 800 * 60;
+		List<ReadyPatch> ps = Arrays.asList(
+			new ReadyPatch("celastrus", "Celastrus", "Farming Guild", at("2026-11-04T21:20"), celastrus));
+		List<Batch> bs = Batcher.build(ps, at("2026-11-04T08:05"), WINDOW, 1, LOOKAHEAD, AWAKE);
+		assertEquals(ICON + "Celastrus", only(bs, at("2026-11-04T21:20")).title);
+		assertEquals(ICON + "Celastrus", only(bs, at("2026-11-05T10:40")).title);
+		assertTrue(bs.size() > 2);
+	}
+
+	@Test
 	public void smallDriftIsTheSameSchedule()
 	{
 		long now = at("2026-10-27T05:00");
