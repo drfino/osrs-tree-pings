@@ -225,4 +225,43 @@ public class BatcherTest
 		List<ReadyPatch> ps = Arrays.asList(new ReadyPatch("tree", "Maple", "Varrock", at("2026-10-10T12:00"), YEW));
 		assertEquals(0, Batcher.build(ps, at("2026-11-01T10:00"), WINDOW, 1, LOOKAHEAD, AWAKE).size());
 	}
+
+	@Test
+	public void doneTreesCatchUpWithAFreshlyPlantedOne()
+	{
+		// Seen on PC: five palms replanted, due 23:51. Kastori and Lletya were replanted on the
+		// same mobile run but RuneLite still thinks they finished yesterday. They should share
+		// the 23:51 timer, so tonight's yew run doesn't mention palms at all.
+		long now = at("2026-11-04T15:05");
+		List<ReadyPatch> ps = new ArrayList<>();
+		for (String place : Arrays.asList("Falador", "Lumbridge", "Varrock"))
+		{
+			ps.add(new ReadyPatch("tree", "Yew", place, at("2026-11-04T21:11"), YEW));
+		}
+		for (String place : Arrays.asList("Brimhaven", "Catherby", "Gnome Stronghold", "Farming Guild", "Tree Gnome Village"))
+		{
+			ps.add(new ReadyPatch("fruit_tree", "Palm", place, at("2026-11-04T23:51"), PALM));
+		}
+		ps.add(new ReadyPatch("fruit_tree", "Palm", "Kastori", at("2026-11-03T05:11"), PALM));
+		ps.add(new ReadyPatch("fruit_tree", "Palm", "Lletya", at("2026-11-03T05:11"), PALM));
+		List<Batch> bs = Batcher.build(ps, now, WINDOW, 1, LOOKAHEAD, AWAKE);
+		assertEquals(ICON + "Yew", only(bs, at("2026-11-04T21:11")).title);
+		Batch morning = only(bs, at("2026-11-05T08:00"));
+		assertTrue(morning.detail, morning.detail.contains("Kastori") && morning.detail.contains("Lletya"));
+	}
+
+	@Test
+	public void runningTimersAreNeverMoved()
+	{
+		// Six yews from the 8:00 PC run, plus one dead tree replanted at 11:00. The six keep 14:40.
+		long now = at("2026-11-04T11:05");
+		List<ReadyPatch> ps = new ArrayList<>();
+		for (String place : Arrays.asList("Falador", "Lumbridge", "Varrock", "Taverley", "Gnome Stronghold", "Auburnvale"))
+		{
+			ps.add(new ReadyPatch("tree", "Yew", place, at("2026-11-04T14:40"), YEW));
+		}
+		ps.add(new ReadyPatch("tree", "Yew", "Farming Guild", at("2026-11-04T17:40"), YEW));
+		List<ReadyPatch> out = Batcher.catchUpStalePatches(ps, now);
+		assertEquals(ps, out);
+	}
 }

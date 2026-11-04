@@ -112,6 +112,9 @@ This little script lives in **your own** Google account. It's the thing that wri
 - **When you log in,** chat tells you what's ready right now and when your next notification is.
 - **You can close RuneLite any time** after a run. The events are already on your calendar.
 - **Did a run on mobile?** Nothing to do. The daily rhythm already covers it, for days at a time.
+- **Want exact times again after mobile runs?** Walk past any one patch of each kind on PC (the
+  Farming Guild has most kinds). If RuneLite sees one tree of a kind freshly planted, every patch
+  of that kind it still thinks is "Done" gets the same timer.
   Next time you play on PC, everything updates.
 
 ---

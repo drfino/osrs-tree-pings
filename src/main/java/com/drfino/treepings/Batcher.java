@@ -141,13 +141,41 @@ final class Batcher
 	 * @param lookaheadSeconds ignore anything further out than this
 	 * @param awake the player's waking hours
 	 */
+	/**
+	 * If any tree of a kind is still growing, every tree of that kind RuneLite thinks is
+	 * already "Done" was replanted with it on a run RuneLite didn't see, so it gets the same
+	 * timer (the freshest one). Trees with their own running timer are never touched, so
+	 * replanting one dead tree can't move the rest.
+	 */
+	static List<ReadyPatch> catchUpStalePatches(List<ReadyPatch> patches, long unixNow)
+	{
+		Map<String, Long> freshest = new java.util.HashMap<>();
+		for (ReadyPatch p : patches)
+		{
+			if (p.getReadyAt() > unixNow)
+			{
+				freshest.merge(p.getTypeKey() + "/" + p.getProduceName(), p.getReadyAt(), Math::max);
+			}
+		}
+		List<ReadyPatch> out = new ArrayList<>(patches.size());
+		for (ReadyPatch p : patches)
+		{
+			Long fresh = freshest.get(p.getTypeKey() + "/" + p.getProduceName());
+			boolean stale = p.getReadyAt() <= unixNow && p.getReadyAt() > unixNow - ABANDONED_SECONDS;
+			out.add(fresh != null && stale
+				? new ReadyPatch(p.getTypeKey(), p.getProduceName(), p.getLocation(), fresh, p.getGrowSeconds())
+				: p);
+		}
+		return out;
+	}
+
 	static List<Batch> build(List<ReadyPatch> patches, long unixNow, long windowSeconds,
 		int followOnCycles, long lookaheadSeconds, Awake awake)
 	{
 		long horizon = unixNow + lookaheadSeconds;
 		List<Entry> entries = new ArrayList<>();
 
-		for (ReadyPatch p : patches)
+		for (ReadyPatch p : catchUpStalePatches(patches, unixNow))
 		{
 			boolean regularTree = "tree".equals(p.getTypeKey());
 			long ding = awake.dingTime(p.getReadyAt());
