@@ -70,8 +70,10 @@ public class BatcherTest
 		List<Batch> bs = Batcher.build(day(), at("2026-10-27T00:56"), WINDOW, 2, LOOKAHEAD, AWAKE);
 		assertEquals(ICON + "Yew, Calquat", only(bs, at("2026-10-27T14:40")).title);
 		assertEquals(ICON + "Yew", only(bs, at("2026-10-27T21:20")).title);
-		// Papayas and calquats replanted at their dings come back on the next morning run.
-		assertEquals(ICON + "Yew, Papaya, Calquat", only(bs, at("2026-10-28T08:00")).title);
+		// Each is replanted on the run that announced it: papayas at 8:00 are back the next
+		// morning, calquats at 14:40 are ready around noon and back on the next 14:40 run.
+		assertEquals(ICON + "Yew, Papaya", only(bs, at("2026-10-28T08:00")).title);
+		assertEquals(ICON + "Yew, Calquat", only(bs, at("2026-10-28T14:40")).title);
 	}
 
 	@Test
@@ -263,5 +265,26 @@ public class BatcherTest
 		ps.add(new ReadyPatch("tree", "Yew", "Farming Guild", at("2026-11-04T17:40"), YEW));
 		List<ReadyPatch> out = Batcher.catchUpStalePatches(ps, now);
 		assertEquals(ps, out);
+	}
+
+	@Test
+	public void slowCropsAreReplantedOnTheRunThatAnnouncesThem()
+	{
+		// Yews and the Celastrus were planted on the 8:00 run. The Celastrus (13h20m) is ready at
+		// 21:20 but only announced on the next 8:00 run, so that's when it gets replanted: it
+		// belongs on each morning run, never on an afternoon yew ding while it's still growing.
+		long now = at("2026-11-09T09:00");
+		List<ReadyPatch> ps = new ArrayList<>();
+		for (String place : Arrays.asList("Falador", "Lumbridge", "Varrock"))
+		{
+			ps.add(new ReadyPatch("tree", "Yew", place, at("2026-11-09T14:40"), YEW));
+		}
+		ps.add(new ReadyPatch("celastrus", "Celastrus", "Farming Guild", at("2026-11-09T21:20"), 800 * 60));
+		List<Batch> bs = Batcher.build(ps, now, WINDOW, 1, LOOKAHEAD, AWAKE);
+		for (String day : Arrays.asList("2026-11-10", "2026-11-11", "2026-11-12"))
+		{
+			assertEquals(ICON + "Yew, Celastrus", only(bs, at(day + "T08:00")).title);
+			assertEquals(ICON + "Yew", only(bs, at(day + "T14:40")).title);
+		}
 	}
 }

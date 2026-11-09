@@ -173,48 +173,37 @@ final class Batcher
 		int followOnCycles, long lookaheadSeconds, Awake awake)
 	{
 		long horizon = unixNow + lookaheadSeconds;
+		List<ReadyPatch> current = catchUpStalePatches(patches, unixNow);
+
+		// Regular trees first: their dings are the runs everything else rides along on.
 		List<Entry> entries = new ArrayList<>();
-
-		for (ReadyPatch p : catchUpStalePatches(patches, unixNow))
+		for (ReadyPatch p : current)
 		{
-			boolean regularTree = "tree".equals(p.getTypeKey());
-			long ding = awake.dingTime(p.getReadyAt());
-			entries.add(new Entry(p.getProduceName(), p.getLocation(), ding, false, regularTree));
-
-			if (followOnCycles > 0 && REPLANTED.contains(p.getTypeKey()) && p.getGrowSeconds() > 0
-				&& p.getReadyAt() > unixNow - ABANDONED_SECONDS)
+			if (isRegularTree(p))
 			{
-				// Assume the player replants at every ding, keeping a daily rhythm: a morning run
-				// plus up to followOnCycles more runs that day, then the next morning.
-				long stop = Math.min(horizon, unixNow + RHYTHM_SECONDS);
-				long base = ding;
-				// The run that planted this tree counts as one of the day's runs, so a PC run in
-				// the morning plus its afternoon ding doesn't also get an evening ding.
-				long planted = p.getReadyAt() - p.getGrowSeconds();
-				int runsToday = awake.day(planted).equals(awake.day(ding)) ? 1 : 0;
-				while (true)
+				addEntries(p, entries, t -> t, unixNow, followOnCycles, awake);
+			}
+		}
+		List<long[]> runs = anchorRuns(entries, unixNow, horizon, windowSeconds);
+
+		// A slower crop is only replanted when it's announced, on the next regular-tree run,
+		// so its assumed rhythm counts from that run, not from when it finished growing.
+		java.util.function.LongUnaryOperator announced = t ->
+		{
+			for (long[] run : runs)
+			{
+				if (run[0] + windowSeconds >= t)
 				{
-					long ready = base + p.getGrowSeconds();
-					long next = awake.dingTime(ready);
-					if (awake.day(next).equals(awake.day(base)))
-					{
-						if (++runsToday > followOnCycles)
-						{
-							next = awake.nextMorning(base);
-							runsToday = 0;
-						}
-					}
-					else
-					{
-						runsToday = 0;
-					}
-					if (next > stop)
-					{
-						break;
-					}
-					entries.add(new Entry(p.getProduceName(), p.getLocation(), next, true, regularTree));
-					base = next;
+					return Math.max(run[1], t);
 				}
+			}
+			return t;
+		};
+		for (ReadyPatch p : current)
+		{
+			if (!isRegularTree(p))
+			{
+				addEntries(p, entries, announced, unixNow, followOnCycles, awake);
 			}
 		}
 
@@ -275,6 +264,90 @@ final class Batcher
 
 		out.sort(Comparator.comparingLong((Batch b) -> b.readyAt).thenComparing(b -> b.key));
 		return out;
+	}
+
+	private static boolean isRegularTree(ReadyPatch p)
+	{
+		return "tree".equals(p.getTypeKey());
+	}
+
+	/**
+	 * Adds a patch's ding and, for trees that get replanted, its assumed daily rhythm.
+	 * {@code replantedAt} maps a ding to when the player actually hears about it, which is
+	 * when they replant.
+	 */
+	private static void addEntries(ReadyPatch p, List<Entry> entries, java.util.function.LongUnaryOperator replantedAt,
+		long unixNow, int followOnCycles, Awake awake)
+	{
+		boolean regularTree = isRegularTree(p);
+		long ding = awake.dingTime(p.getReadyAt());
+		entries.add(new Entry(p.getProduceName(), p.getLocation(), ding, false, regularTree));
+
+		if (followOnCycles > 0 && REPLANTED.contains(p.getTypeKey()) && p.getGrowSeconds() > 0
+			&& p.getReadyAt() > unixNow - ABANDONED_SECONDS)
+		{
+			// Assume the player replants at every ding, keeping a daily rhythm: a morning run
+			// plus up to followOnCycles more runs that day, then the next morning.
+			long stop = unixNow + RHYTHM_SECONDS;
+			long base = replantedAt.applyAsLong(ding);
+			// The run that planted this tree counts as one of the day's runs, so a PC run in
+			// the morning plus its afternoon ding doesn't also get an evening ding.
+			long planted = p.getReadyAt() - p.getGrowSeconds();
+			int runsToday = awake.day(planted).equals(awake.day(base)) ? 1 : 0;
+			while (true)
+			{
+				long ready = base + p.getGrowSeconds();
+				long next = awake.dingTime(ready);
+				if (awake.day(next).equals(awake.day(base)))
+				{
+					if (++runsToday > followOnCycles)
+					{
+						next = awake.nextMorning(base);
+						runsToday = 0;
+					}
+				}
+				else
+				{
+					runsToday = 0;
+				}
+				if (next > stop)
+				{
+					break;
+				}
+				entries.add(new Entry(p.getProduceName(), p.getLocation(), next, true, regularTree));
+				base = replantedAt.applyAsLong(next);
+			}
+		}
+	}
+
+	/**
+	 * The upcoming regular-tree runs as {start, readyAt}, grouped exactly as {@link #build}
+	 * groups them into dings.
+	 */
+	private static List<long[]> anchorRuns(List<Entry> anchorEntries, long unixNow, long horizon, long windowSeconds)
+	{
+		List<Long> times = new ArrayList<>();
+		for (Entry e : anchorEntries)
+		{
+			if (e.dingAt > unixNow && e.dingAt <= horizon)
+			{
+				times.add(e.dingAt);
+			}
+		}
+		Collections.sort(times);
+		List<long[]> runs = new ArrayList<>();
+		int i = 0;
+		while (i < times.size())
+		{
+			long start = times.get(i);
+			long readyAt = start;
+			while (i < times.size() && times.get(i) - start <= windowSeconds)
+			{
+				readyAt = times.get(i++);
+			}
+			runs.add(new long[]{start, readyAt});
+		}
+		return runs;
 	}
 
 	/**
