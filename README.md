@@ -32,6 +32,10 @@ shows an ordinary Google Calendar notification, just like a meeting reminder.
 On a normal day, your **OSRS timers** calendar has events like these. Each one is a short
 event at the time shown, and its notification uses the event title:
 
+<img src="docs/event.png" alt="A Tree Pings event in Google Calendar: Yew, Celastrus, Camphor, Palm at 9:51 PM, with the patches listed inside" width="480">
+
+*A real event. (This calendar was renamed "OSRS Trees"; yours starts out as "OSRS timers".)*
+
 | Time | Calendar event (and notification) | Inside the event |
 | --- | --- | --- |
 | 8:00 AM | **🌳 Yew, Palm, Calquat** | Yew: Falador, Lumbridge, Varrock…<br>Palm: Brimhaven, Catherby…<br>Calquat: Kastori, Tai Bwo Wannai |
