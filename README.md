@@ -69,7 +69,8 @@ The script lives in **your own** Google account. It's the thing that writes to y
 
 1. Open **[the Tree Pings script](https://script.google.com/d/1sDLFpKl0nzbDjGBqqHxnH1PVNPpTsI0ekrgv96VX_rL39DK4JuevPp4u/edit)**
    (sign in to Google if it asks).
-2. Click ⓘ **Overview** on the left, then the **Make a copy** icon at the top right.
+2. Click ⓘ **Overview** at the top of the left sidebar, then the **Make a copy** icon (two
+   overlapping pages, next to the star) at the top right.
    You're now in your own copy, called "Copy of OSRS Tree Pings".
 
 *No copy button? Go to [script.google.com](https://script.google.com) → **New project**, delete
