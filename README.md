@@ -54,56 +54,47 @@ event at the time shown, and its notification uses the event title:
 
 ---
 
-## Setup (about 10 minutes, once)
+## Setup (about 3 minutes, once)
 
-You need: a Google account, and the Google Calendar app on your phone.
+You need a Google account and the Google Calendar app on your phone. Install **Tree Pings**
+from RuneLite's Plugin Hub first.
 
-### Step 1: Make your private Google script
+### 1. Get your own copy of the script
 
-This little script lives in **your own** Google account. It's the thing that writes to your calendar.
+The script lives in **your own** Google account. It's the thing that writes to your calendar.
 
 1. Go to **[script.google.com](https://script.google.com)** and click **New project**.
-   Click **Untitled project** at the top and rename it **Tree Pings**.
-2. Delete everything in the editor. Paste in **[this code](apps-script/Code.gs)** instead
-   (open it, click the copy button). Click 💾 **Save**.
-3. Click ⚙️ **Project Settings** on the left. Scroll to **Script properties** → **Add script property**.
-   - Property: `TOKEN`
-   - Value: make up a long password, like `pineapple-tornado-4471-mustard`.
-     **Write it down**, you'll need it in step 3.
-   - Click **Save script properties**.
-4. Click **< > Editor** on the left. In the dropdown at the top, choose **`setup`**, then click **▶ Run**.
-   - Google asks for permission. Click **Review permissions** and pick your account.
-   - It will say **"Google hasn't verified this app."** That's normal: it's your own script.
-     Click **Advanced** → **Go to Tree Pings (unsafe)** → **Allow**.
-   - This creates a new calendar called **OSRS timers**.
-5. Click **Deploy** (top right) → **New deployment**.
-   - Click the ⚙️ next to "Select type" → **Web app**.
-   - **Execute as:** Me
-   - **Who has access:** Anyone
-   - Click **Deploy**, then **copy the Web app URL**. It ends in `/exec`.
+2. Delete everything in the editor, paste in **[this code](apps-script/Code.gs)** (open it and
+   click the copy button), and click 💾 **Save**.
 
-> "Anyone" just means the plugin can reach the script. Nobody can do anything with it
-> without your password from step 3.
+### 2. Deploy it
 
-### Step 2: Make sure your phone gets the notification
+1. Click **Deploy** (top right) → **New deployment**.
+2. Click the ⚙️ next to "Select type" → **Web app**.
+3. Set **Execute as:** Me and **Who has access:** Anyone, then click **Deploy**.
+4. Google asks for permission. Click **Authorize access** and pick your account. It says
+   **"Google hasn't verified this app."** That's normal: it's your own script. Click
+   **Advanced** → **Go to (your project) (unsafe)** → **Allow**.
+5. **Copy the Web app URL.** It ends in `/exec`.
 
-1. Open the **Google Calendar** app → ☰ menu → make sure **OSRS timers** is ticked.
-2. Back in the script editor, choose **`sendTestEvent`** in the dropdown and click **▶ Run**.
-3. **Wait 2 minutes.** Your phone should show a Google Calendar notification called "Tree Pings test ding".
+> "Anyone" just means the plugin can reach the script. The first time the plugin connects, the
+> script locks itself to that plugin and ignores everyone else.
 
-**No notification?** Fix this before going on:
+### 3. Paste the URL into Tree Pings
+
+In RuneLite, open the Tree Pings settings (🔧 wrench → search "Tree Pings") and paste the URL
+into **Script URL**. Chat says *"Tree Pings: connected."*
+
+### 4. Check your phone
+
+About 2 minutes later your phone shows a Google Calendar notification called
+"Tree Pings test ding". **You're done.** Farm like normal.
+
+**Didn't get it?** The plugin is fine if chat said "connected"; this is a phone setting:
+- Open the **Google Calendar** app → ☰ menu → make sure **OSRS timers** is ticked.
 - **Android:** phone Settings → Accounts → your Google account → Account sync → turn on **OSRS timers**.
-- **iPhone:** use the Google Calendar app (not Apple's Calendar). Allow its notifications in iPhone Settings.
-- Check that Do Not Disturb isn't on, then run `sendTestEvent` again.
-
-### Step 3: Turn on the plugin
-
-1. In RuneLite, open the **Plugin Hub** and install **Tree Pings**.
-2. Open its settings (🔧 wrench → search "Tree Pings").
-3. Paste your **Apps Script URL** (from step 1.5) and your **Token** (the password from step 1.3).
-4. Tick **Send test ding**. Chat says *"test event created"*, and about 2 minutes later your phone shows the calendar notification.
-
-**You're done.** Farm like normal.
+- **iPhone:** use the Google Calendar app (not Apple's Calendar) and allow its notifications in iPhone Settings.
+- Check that Do Not Disturb isn't on, then tick **Send test ding** in the plugin settings to try again.
 
 ---
 
@@ -121,12 +112,12 @@ This little script lives in **your own** Google account. It's the thing that wri
 
 ## Settings
 
-Most people only need the first three.
+Most people only need the Script URL.
 
 | Setting | What it does |
 | --- | --- |
-| **Apps Script URL** | The link from setup step 1. |
-| **Token** | The password from setup step 1. |
+| **Open setup guide** | Tick it to open the setup steps above in your browser. |
+| **Script URL** | The Web app URL from setup step 2. Pasting it connects the plugin and sends a test ding. |
 | **Send test ding** | Tick it to put a test event on your calendar. Your phone gets its notification 2 minutes later. |
 | **Awake from / until** | Your waking hours (24-hour clock). Default 8 to 0 (8 AM to midnight). Anything finishing while you sleep waits for one morning event. Set both the same to get notifications around the clock. |
 | **Follow-on runs** | Runs a day after your morning run. Default 1 (morning + afternoon). Set 2 for three runs a day, or 0 if you only farm on PC and want reminders only for what RuneLite has seen. |
@@ -141,15 +132,15 @@ Tree Pings tells you in chat when something goes wrong:
 
 | Chat says | Do this |
 | --- | --- |
-| "it isn't set up yet" | Paste your URL and token in the plugin settings. |
-| "(bad token)" | The token in RuneLite must match `TOKEN` in the script **exactly**. |
+| "not set up yet" | Follow the setup steps above and paste your Script URL in the plugin settings. |
+| "(bad token)" | The script is linked to a different RuneLite install. In the script, open ⚙️ **Project Settings**, delete `TOKEN` under **Script properties**, then paste the Script URL into the plugin again. |
 | "(HTTP …)" or "unexpected reply" | Check the URL ends in `/exec`, and the deployment's **Who has access** is **Anyone**. |
 | "(couldn't reach Google)" | Internet problem. It keeps trying on its own. |
 | "N trees can't be timed yet" | RuneLite is still learning the farming clock. Stand near a growing tree until it grows a stage. |
 | "Time Tracking plugin is turned off" | Turn RuneLite's built-in **Time Tracking** plugin back on. |
 
 **Events are on the calendar but no notification shows up?** That's a phone setting.
-Go back through setup step 2.
+See "Didn't get it?" in setup step 4.
 
 **Good to know:**
 - RuneLite only knows what it last saw. If you skip a run, the rhythm assumes you didn't and keeps reminding you on schedule; log in on PC to resync.
@@ -164,8 +155,8 @@ Go back through setup step 2.
 
 - Your tree times go to **your own** Google script and **your own** calendar. Nothing else.
 - The events are marked **private**.
-- The script ignores anything that doesn't carry your token.
-- Keep your URL and token to yourself.
+- The script only listens to the plugin that connected to it first, and ignores everything else.
+- Keep your Script URL to yourself.
 
 ---
 

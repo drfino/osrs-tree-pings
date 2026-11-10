@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -34,6 +35,7 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.RuneScapeProfileChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.util.LinkBrowser;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
@@ -57,6 +59,7 @@ public class TreePingsPlugin extends Plugin
 	/** Dings that only moved by this much don't need a calendar update. */
 	private static final long DRIFT_SECONDS = 10 * 60;
 	private static final long MAX_RETRY_SECONDS = 15 * 60;
+	private static final String SETUP_GUIDE = "https://github.com/drfino/osrs-tree-pings#setup-about-3-minutes-once";
 
 	@Inject
 	private TreePingsConfig config;
@@ -97,6 +100,7 @@ public class TreePingsPlugin extends Plugin
 	private volatile String lastSyncedPatches;
 	private volatile boolean warnedUntimed;
 	private volatile boolean warnedTimeTrackingOff;
+	private volatile boolean saidHowToSetUp;
 
 	@Provides
 	TreePingsConfig provideConfig(ConfigManager configManager)
@@ -119,6 +123,8 @@ public class TreePingsPlugin extends Plugin
 		warnedBadSetup = false;
 		warnedUntimed = false;
 		warnedTimeTrackingOff = false;
+		saidHowToSetUp = false;
+		token();
 		schedule(5);
 	}
 
@@ -140,6 +146,11 @@ public class TreePingsPlugin extends Plugin
 	{
 		// Logged in: sync whatever Time Tracking already knows, even if nothing changes this session.
 		announce = true;
+		if (scriptUrl() == null && !saidHowToSetUp)
+		{
+			saidHowToSetUp = true;
+			chat("Tree Pings: not set up yet. Open its settings and tick \"Open setup guide\" (about 3 minutes).");
+		}
 		schedule(5);
 	}
 
@@ -159,8 +170,18 @@ public class TreePingsPlugin extends Plugin
 			return;
 		}
 
-		if ("tipShown".equals(e.getKey()))
+		if ("tipShown".equals(e.getKey()) || "token".equals(e.getKey()))
 		{
+			return;
+		}
+
+		if ("setupGuide".equals(e.getKey()))
+		{
+			if (config.setupGuide())
+			{
+				configManager.setConfiguration(TreePingsConfig.GROUP, "setupGuide", false);
+				LinkBrowser.browse(SETUP_GUIDE);
+			}
 			return;
 		}
 
@@ -174,7 +195,19 @@ public class TreePingsPlugin extends Plugin
 			return;
 		}
 
-		// URL, token or batching settings changed: resend everything.
+		if ("scriptUrl".equals(e.getKey()) && !config.scriptUrl().trim().isEmpty())
+		{
+			// Pasting the link is the last setup step: connect and prove it with a test ding.
+			if (scriptUrl() == null)
+			{
+				chat("Tree Pings: that doesn't look like the Web app URL. It starts with"
+					+ " https://script.google.com and ends in /exec.");
+				return;
+			}
+			executor.execute(this::connect);
+		}
+
+		// URL or batching settings changed: resend everything.
 		lastSentBatches = null;
 		warnedBadSetup = false;
 		schedule(2);
@@ -224,13 +257,13 @@ public class TreePingsPlugin extends Plugin
 		{
 			return;
 		}
-		if (scriptUrl() == null || config.token().isEmpty())
+		if (scriptUrl() == null)
 		{
 			if (!warnedBadSetup)
 			{
 				warnedBadSetup = true;
-				chat("Tree Pings: saw your trees change, but it isn't set up yet. Add your Apps Script URL"
-						+ " (the script.google.com link ending in /exec) and token in its settings.");
+				chat("Tree Pings: saw your trees change, but it isn't set up yet. Open its settings and"
+					+ " tick \"Open setup guide\" (about 3 minutes).");
 			}
 			return;
 		}
@@ -313,7 +346,7 @@ public class TreePingsPlugin extends Plugin
 	private CompletableFuture<Boolean> syncNow()
 	{
 		HttpUrl url = scriptUrl();
-		if (url == null || config.token().isEmpty())
+		if (url == null)
 		{
 			return CompletableFuture.completedFuture(false);
 		}
@@ -343,7 +376,7 @@ public class TreePingsPlugin extends Plugin
 		}
 
 		Map<String, Object> body = new LinkedHashMap<>();
-		body.put("token", config.token());
+		body.put("token", token());
 		body.put("test", false);
 		body.put("batches", batches);
 
@@ -380,19 +413,45 @@ public class TreePingsPlugin extends Plugin
 
 	private void sendTest()
 	{
+		postTest("Tree Pings: test event created. Your phone should ding in about 2 minutes.",
+			"Tree Pings: test failed");
+	}
+
+	/** A new Script URL was pasted: the first request links the script to this plugin. */
+	private void connect()
+	{
+		postTest("Tree Pings: connected. Your phone should ding in about 2 minutes."
+			+ " No ding? See \"Didn't get it?\" in the setup guide.", "Tree Pings: couldn't connect");
+	}
+
+	private void postTest(String success, String failure)
+	{
 		HttpUrl url = scriptUrl();
-		if (url == null || config.token().isEmpty())
+		if (url == null)
 		{
-			chat("Tree Pings: set the Apps Script URL and token first.");
+			chat("Tree Pings: paste your Script URL first. Tick \"Open setup guide\" if you don't have one yet.");
 			return;
 		}
 
 		Map<String, Object> body = new LinkedHashMap<>();
-		body.put("token", config.token());
+		body.put("token", token());
 		body.put("test", true);
-		post(url, gson.toJson(body), (ok, error) -> chat(ok
-			? "Tree Pings: test event created. Your phone should ding in about 2 minutes."
-			: "Tree Pings: test failed (" + error + "). " + setupHint(error)));
+		post(url, gson.toJson(body), (ok, error) -> chat(ok ? success : failure + " (" + error + "). " + setupHint(error)));
+	}
+
+	/**
+	 * The password shared with the script. Players never see it: the plugin makes one up, and
+	 * the script remembers the first one it's sent. (Older setups typed one in; that still works.)
+	 */
+	private String token()
+	{
+		String token = config.token();
+		if (token.isEmpty())
+		{
+			token = UUID.randomUUID().toString() + UUID.randomUUID();
+			configManager.setConfiguration(TreePingsConfig.GROUP, "token", token);
+		}
+		return token;
 	}
 
 	private interface Done
@@ -504,9 +563,10 @@ public class TreePingsPlugin extends Plugin
 	{
 		if ("bad token".equals(error))
 		{
-			return "Check the token matches the TOKEN script property.";
+			return "This script is linked to a different Tree Pings setup. In the script, open Project Settings,"
+				+ " delete TOKEN under Script properties, then paste the Script URL here again.";
 		}
-		return "Check the Apps Script URL, and that the web app is deployed with access: Anyone.";
+		return "Check the Script URL, and that the web app is deployed with access: Anyone.";
 	}
 
 	private HttpUrl scriptUrl()

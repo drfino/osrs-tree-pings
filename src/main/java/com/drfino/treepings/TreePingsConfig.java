@@ -21,9 +21,20 @@ public interface TreePingsConfig extends Config
 	String advanced = "advanced";
 
 	@ConfigItem(
+		keyName = "setupGuide",
+		name = "Open setup guide",
+		description = "Tick this to open the 3-minute setup guide in your browser. It unticks itself.",
+		position = 0
+	)
+	default boolean setupGuide()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "scriptUrl",
-		name = "Apps Script URL",
-		description = "The Web app URL of your Tree Pings Google Apps Script (ends in /exec)",
+		name = "Script URL",
+		description = "The Web app URL you copied when you deployed your Tree Pings script (ends in /exec). Paste it and your phone gets a test ding.",
 		position = 1
 	)
 	default String scriptUrl()
@@ -31,12 +42,13 @@ public interface TreePingsConfig extends Config
 		return "";
 	}
 
+	// Made up by the plugin the first time it runs; the script remembers the first one it sees.
 	@ConfigItem(
 		keyName = "token",
-		name = "Token",
-		description = "The TOKEN script property you set in the Apps Script",
+		name = "",
+		description = "",
 		secret = true,
-		position = 2
+		hidden = true
 	)
 	default String token()
 	{

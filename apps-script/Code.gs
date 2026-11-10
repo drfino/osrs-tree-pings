@@ -5,15 +5,15 @@
  * dedicated, private "OSRS timers" calendar in sync. Google then delivers the
  * notifications to your phone, even when your PC is off.
  *
- * Setup:
- *   1. script.google.com -> New project -> paste this file.
- *   2. Project Settings -> Script properties -> add TOKEN = <a long random string>.
- *   3. Run `setup` once from the editor and approve the Calendar permission.
- *   4. Deploy -> New deployment -> Web app
+ * Setup (the README has pictures-free step by step):
+ *   1. Deploy -> New deployment -> Web app
  *        Execute as: Me      Who has access: Anyone
- *      Copy the Web app URL into the plugin settings, along with the TOKEN.
- *   5. Run `sendTestEvent` from the editor (or the plugin's test button):
- *      your phone should ding in about 2 minutes.
+ *      Approve the Calendar permission when asked, and copy the Web app URL.
+ *   2. Paste the URL into the Tree Pings plugin settings. The plugin links itself to this
+ *      script (it sends a token; the first one this script sees is saved as the TOKEN
+ *      script property and required from then on) and your phone gets a test ding.
+ *
+ * To link a different RuneLite install, delete TOKEN under Project Settings -> Script properties.
  *
  * Request body (JSON), sent by the plugin:
  *   {
@@ -41,8 +41,15 @@ const CLEANUP_DAYS = 30;      // how far back cleanup looks
 function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    const expected = PropertiesService.getScriptProperties().getProperty('TOKEN');
-    if (!expected || body.token !== expected) {
+    const props = PropertiesService.getScriptProperties();
+    const token = String(body.token || '');
+    let expected = props.getProperty('TOKEN');
+    if (!expected && token.length >= 16) {
+      // First contact: this plugin now owns the script. Everything else is refused from here on.
+      props.setProperty('TOKEN', token);
+      expected = token;
+    }
+    if (!expected || token !== expected) {
       return reply_({ ok: false, error: 'bad token' });
     }
 
@@ -63,7 +70,7 @@ function doGet() {
   return reply_({ ok: true, service: 'treepings' });
 }
 
-/** Run once from the editor to create the calendar and grant permission. */
+/** Optional: run from the editor to create the calendar ahead of the first sync. */
 function setup() {
   const cal = calendar_();
   Logger.log('Using calendar: ' + cal.getName() + ' (' + cal.getId() + ')');
