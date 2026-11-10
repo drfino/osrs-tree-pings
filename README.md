@@ -63,9 +63,13 @@ from RuneLite's Plugin Hub first.
 
 The script lives in **your own** Google account. It's the thing that writes to your calendar.
 
-1. Go to **[script.google.com](https://script.google.com)** and click **New project**.
-2. Delete everything in the editor, paste in **[this code](apps-script/Code.gs)** (open it and
-   click the copy button), and click 💾 **Save**.
+1. Open **[the Tree Pings script](https://script.google.com/d/1sDLFpKl0nzbDjGBqqHxnH1PVNPpTsI0ekrgv96VX_rL39DK4JuevPp4u/edit)**
+   (sign in to Google if it asks).
+2. Click ⓘ **Overview** on the left, then the **Make a copy** icon at the top right.
+   You're now in your own copy, called "Copy of Tree Pings".
+
+*No copy button? Go to [script.google.com](https://script.google.com) → **New project**, delete
+everything in the editor, paste in [this code](apps-script/Code.gs) and click 💾 **Save**.*
 
 ### 2. Deploy it
 
