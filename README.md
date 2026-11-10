@@ -71,6 +71,8 @@ The script lives in **your own** Google account. It's the thing that writes to y
    (sign in to Google if it asks).
 2. Click ⓘ **Overview** at the top of the left sidebar, then the **Make a copy** icon (two
    overlapping pages, next to the star) at the top right.
+
+   <img src="docs/copy-icon.png" alt="The Make a copy icon, circled, next to the star at the top right of the Overview page" width="200">
    You're now in your own copy, called "Copy of OSRS Tree Pings".
 
 *No copy button? Go to [script.google.com](https://script.google.com) → **New project**, delete
