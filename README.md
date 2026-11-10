@@ -16,17 +16,6 @@ shows an ordinary Google Calendar notification, just like a meeting reminder.
 
 ---
 
-## How it works
-
-1. **You farm like normal, on PC or mobile.** On PC, Tree Pings reads the timers RuneLite's
-   Time Tracking plugin already keeps. It doesn't touch the game.
-2. **When your run is done, it updates your calendar.** A few minutes after your last patch
-   (or right away when you log out), chat says:
-   > Tree Pings: calendar updated. Next ding: 🌳 Yew at 2:40 PM.
-3. **At that time, your phone shows a Google Calendar notification.** It works the same
-   whether your PC is on, off, or asleep, because the events now live in Google Calendar.
-   Tap the notification to open the event and see which patches it's for.
-
 ## What you'll see
 
 On a normal day, your **OSRS timers** calendar has events like these. Each one is a short
@@ -53,6 +42,19 @@ event at the time shown, and its notification uses the event title:
   the current plan, and events older than 12 hours are deleted.
 - **Events are private** and only ever written to the OSRS timers calendar. Your other
   calendars aren't touched.
+
+---
+
+## How it works
+
+1. **You farm like normal, on PC or mobile.** On PC, Tree Pings reads the timers RuneLite's
+   Time Tracking plugin already keeps. It doesn't touch the game.
+2. **When your run is done, it updates your calendar.** A few minutes after your last patch
+   (or right away when you log out), chat says:
+   > Tree Pings: calendar updated. Next ding: 🌳 Yew at 2:40 PM.
+3. **At that time, your phone shows a Google Calendar notification.** It works the same
+   whether your PC is on, off, or asleep, because the events now live in Google Calendar.
+   Tap the notification to open the event and see which patches it's for.
 
 ---
 
@@ -104,6 +106,15 @@ About 2 minutes later your phone shows a Google Calendar notification called
 
 ---
 
+## Privacy
+
+- Your tree times go to **your own** Google script and **your own** calendar. Nothing else.
+- The events are marked **private**.
+- The script only listens to the plugin that connected to it first, and ignores everything else.
+- Keep your Script URL to yourself.
+
+---
+
 ## Day to day
 
 - **When you log in,** chat tells you when your next notification is.
@@ -113,22 +124,6 @@ About 2 minutes later your phone shows a Google Calendar notification called
   Farming Guild has most kinds). If RuneLite sees one tree of a kind freshly planted, every patch
   of that kind it still thinks is "Done" gets the same timer.
   Next time you play on PC, everything updates.
-
----
-
-## Settings
-
-Most people only need the Script URL.
-
-| Setting | What it does |
-| --- | --- |
-| **Open setup guide** | Tick it to open the setup steps above in your browser. |
-| **Script URL** | The Web app URL from setup step 2. Pasting it connects the plugin and sends a test ding. |
-| **Send test ding** | Tick it to put a test event on your calendar. Your phone gets its notification 2 minutes later. |
-| **Awake from / until** | Your waking hours (24-hour clock). Default 8 to 0 (8 AM to midnight). Anything finishing while you sleep waits for one morning event. Set both the same to get notifications around the clock. |
-| **Follow-on runs** | Runs a day after your morning run. Default 1 (morning + afternoon). Set 2 for three runs a day, or 0 if you only farm on PC and want reminders only for what RuneLite has seen. |
-| **Chat messages** | The "next ding" messages in chat. Problems always show, even if this is off. |
-| *Advanced* | Sync delay, group window and "only belled patches". You don't need to touch these. |
 
 ---
 
@@ -159,9 +154,6 @@ See "Didn't get it?" in setup step 4.
 
 ## FAQ
 
-**Why Google Calendar?**
-I built this for myself, and Google Calendar is what I use. I'm not sure if this would work on any other calendar, if Apple calendar has a google scripts equivalent, for example.
-
 **Why do I need my own Google script?**
 The RL plugin can't write to your calendar directly, so it sends your tree times to a small
 script in your own Google account, and the script updates your calendar. There is no Tree
@@ -170,6 +162,12 @@ Pings server and no account to create.
 **Google says "this app isn't verified". Is that a problem?**
 No. Google shows that warning for any personal script it hasn't reviewed. The script is your
 own copy, running in your own account, and you can read all of it in `apps-script/Code.gs`.
+
+**Does it cost anything?**
+No! Google Apps Script and Google Calendar are free.
+
+**Why Google Calendar?**
+I built this for myself, and Google Calendar is what I use. I'm not sure if this would work on any other calendar, if Apple calendar has a google scripts equivalent, for example.
 
 **How does it know about runs I do on mobile?**
 It doesn't...RuneLite can't see mobile play, so the plugin assumes you replanted at the time
@@ -180,11 +178,6 @@ time RuneLite sees the patch on PC.
 That reminder was one of those assumed times (the event says "if replanted"), and you
 planted later than it assumed or skipped a run.
 
-**Why don't I get a notification for each tree?**
-Trees that finish within 45 minutes of each other are batched in one cal event. Fruit trees,
-calquats, celastrus and hardwoods don't get their own: they are listed on the next
-regular-tree notification.
-
 **My fruit trees (or calquats, celastrus, hardwoods) finished hours ago and I got no notification. Is it broken?**
 No. Only regular trees (oak, willow, maple, yew, magic) create notifications. Other trees
 that finish within 45 minutes of a regular-tree notification are included in it. Ones that
@@ -192,9 +185,10 @@ finish later than that are listed on your next regular-tree notification, which 
 several hours later, or the next morning. If you have no regular trees growing, the other
 trees get their own notifications.
 
-**Why do the titles have no patch counts?**
-After a mobile run the plugin doesn't know how many patches you did, so the counts were
-often wrong. The patch list is inside the event, but I prefered to see "do your yews" rather than "do your 6x yews", because the first one is usually always right, and the number could often be wrong (even though all your trees are usually done at the same time)
+**Why don't I get a notification for each tree?**
+Trees that finish within 45 minutes of each other are batched in one cal event. Fruit trees,
+calquats, celastrus and hardwoods don't get their own: they are listed on the next
+regular-tree notification.
 
 **Why are there no notifications at night?**
 Anything that finishes outside your awake hours waits until the hour you wake up. You can
@@ -204,21 +198,29 @@ change the hours in the settings, or set both to the same hour to turn this off.
 The plugin waits until you haven't changed a patch for 5 minutes, so it doesn't send a run
 that's still in progress. Logging out or closing RuneLite sends it immediately.
 
+**Why do the titles have no patch counts?**
+After a mobile run the plugin doesn't know how many patches you did, so the counts were
+often wrong. The patch list is inside the event, but I prefered to see "do your yews" rather than "do your 6x yews", because the first one is usually always right, and the number could often be wrong (even though all your trees are usually done at the same time)
+
 **Why only trees?**
 Trees are all I wanted reminders for. Herbs and allotments could be added, but I haven't
 needed them.
 
-**Does it cost anything?**
-No! Google Apps Script and Google Calendar are free.
-
 ---
 
-## Privacy
+## Settings
 
-- Your tree times go to **your own** Google script and **your own** calendar. Nothing else.
-- The events are marked **private**.
-- The script only listens to the plugin that connected to it first, and ignores everything else.
-- Keep your Script URL to yourself.
+Most people only need the Script URL.
+
+| Setting | What it does |
+| --- | --- |
+| **Open setup guide** | Tick it to open the setup steps above in your browser. |
+| **Script URL** | The Web app URL from setup step 2. Pasting it connects the plugin and sends a test ding. |
+| **Send test ding** | Tick it to put a test event on your calendar. Your phone gets its notification 2 minutes later. |
+| **Awake from / until** | Your waking hours (24-hour clock). Default 8 to 0 (8 AM to midnight). Anything finishing while you sleep waits for one morning event. Set both the same to get notifications around the clock. |
+| **Follow-on runs** | Runs a day after your morning run. Default 1 (morning + afternoon). Set 2 for three runs a day, or 0 if you only farm on PC and want reminders only for what RuneLite has seen. |
+| **Chat messages** | The "next ding" messages in chat. Problems always show, even if this is off. |
+| *Advanced* | Sync delay, group window and "only belled patches". You don't need to touch these. |
 
 ---
 
