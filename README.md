@@ -19,8 +19,7 @@ shows an ordinary Google Calendar notification, just like a meeting reminder.
 ## How it works
 
 1. **You farm like normal, on PC or mobile.** On PC, Tree Pings reads the timers RuneLite's
-   Time Tracking plugin already keeps. It doesn't touch the game. Mobile runs are invisible
-   to RuneLite, so those are estimated (see [PC is exact, mobile is a best guess](#pc-is-exact-mobile-is-a-best-guess)).
+   Time Tracking plugin already keeps. It doesn't touch the game.
 2. **When your run is done, it updates your calendar.** A few minutes after your last patch
    (or right away when you log out), chat says:
    > Tree Pings: calendar updated. Next ding: 🌳 Yew at 2:40 PM.
@@ -41,8 +40,10 @@ event at the time shown, and its notification uses the event title:
 - **Your regular trees (yews, magics, etc.) decide when events are created.** Fruit trees,
   calquats and hardwoods don't get events of their own. They're listed on the next
   regular-tree event instead.
-- **It keeps a daily rhythm going for the next 5 days**, so mobile runs still get reminders.
-  These are estimates, marked "(if replanted)" inside the event. More on that just below.
+- **After a mobile run, the times are a best guess.** RuneLite can't see mobile, so Tree
+  Pings assumes you replanted when it reminded you and keeps a daily rhythm going for 5 days.
+  These events say "(if replanted)". If you ran late or skipped a run, the guess is off until
+  RuneLite next sees the patch on PC, and then the real timer takes over.
 - **Titles are just the trees.** The calendar already shows the time, and after mobile runs
   RuneLite can't know which patches you did, so there are no counts. Tap an event for the
   patch list.
@@ -50,27 +51,6 @@ event at the time shown, and its notification uses the event title:
   the current plan, and events older than 12 hours are deleted.
 - **Events are private** and only ever written to the OSRS timers calendar. Your other
   calendars aren't touched.
-
-## PC is exact, mobile is a best guess
-
-RuneLite only sees your patches when you're playing on RuneLite. That gives two kinds of
-reminder:
-
-- **Exact.** You planted on PC, RuneLite saw it, and the event is at the real finish time.
-- **Estimated.** Everything after that. Tree Pings can't see mobile runs, so it assumes the
-  simplest thing: **you replanted when it reminded you.** From there it works out the next
-  finish time, and the one after, for up to 5 days: a morning run, plus one more run a day
-  (change this with **Follow-on runs**). Inside the event these are marked "(if replanted)".
-
-The estimate is right when you do your runs around when you're reminded. It drifts when you
-don't:
-
-- **Ran late or early on mobile?** The next reminder is off by about that much.
-- **Skipped a run?** It doesn't know, and keeps reminding you on the old schedule.
-- **Only did some patches?** It can't tell which, so it assumes all of them.
-
-None of this needs fixing by hand. The next time RuneLite sees a patch on PC, its real timer
-replaces the guess. Trees you only plant once (like a spirit tree) are never guessed.
 
 ---
 
@@ -194,8 +174,8 @@ Here the "app" is your own copy of the script, running in your account. The code
 and you can read all of it in `apps-script/Code.gs`.
 
 **How does it know about my mobile runs?**
-It doesn't. It guesses that you replanted when it reminded you. See
-[PC is exact, mobile is a best guess](#pc-is-exact-mobile-is-a-best-guess).
+It doesn't. It guesses that you replanted when it reminded you, and corrects itself the
+next time RuneLite sees the patch on PC.
 
 **It said my trees were ready and they weren't. Why?**
 That reminder was an estimate (the event says "(if replanted)") and you planted later than
