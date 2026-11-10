@@ -10,15 +10,17 @@ shows an ordinary Google Calendar notification, just like a meeting reminder.
 - The events go on their own private calendar, **OSRS timers**, separate from your real one.
 - No 3 AM notifications. Anything that finishes overnight waits for one morning event.
 - About 2 events a day, not one per tree.
-- **Works with mobile runs.** Play on mobile for days and the reminders keep coming.
-  Log in on PC now and then and they snap back to your exact timers.
+- **Exact on PC, a best guess on mobile.** RuneLite can't see what you do on mobile, so
+  after a mobile run Tree Pings assumes you replanted when it reminded you and keeps the
+  reminders coming. Log in on PC now and then and they snap back to your exact timers.
 
 ---
 
 ## How it works
 
 1. **You farm like normal, on PC or mobile.** On PC, Tree Pings reads the timers RuneLite's
-   Time Tracking plugin already keeps. It doesn't touch the game.
+   Time Tracking plugin already keeps. It doesn't touch the game. Mobile runs are invisible
+   to RuneLite, so those are estimated (see [PC is exact, mobile is a best guess](#pc-is-exact-mobile-is-a-best-guess)).
 2. **When your run is done, it updates your calendar.** A few minutes after your last patch
    (or right away when you log out), chat says:
    > Tree Pings: calendar updated. Next ding: 🌳 Yew at 2:40 PM.
@@ -39,11 +41,8 @@ event at the time shown, and its notification uses the event title:
 - **Your regular trees (yews, magics, etc.) decide when events are created.** Fruit trees,
   calquats and hardwoods don't get events of their own. They're listed on the next
   regular-tree event instead.
-- **It keeps a daily rhythm going for the next 5 days.** It assumes you replant at every
-  notification: a morning run, plus one more run a day one grow cycle later (change this with
-  **Follow-on runs**). So mobile runs, even several days of them, still get reminders. When
-  RuneLite sees a patch again on PC, its exact timer takes over. Trees you only plant once
-  (like a spirit tree) aren't assumed.
+- **It keeps a daily rhythm going for the next 5 days**, so mobile runs still get reminders.
+  These are estimates, marked "(if replanted)" inside the event. More on that just below.
 - **Titles are just the trees.** The calendar already shows the time, and after mobile runs
   RuneLite can't know which patches you did, so there are no counts. Tap an event for the
   patch list.
@@ -51,6 +50,27 @@ event at the time shown, and its notification uses the event title:
   the current plan, and events older than 12 hours are deleted.
 - **Events are private** and only ever written to the OSRS timers calendar. Your other
   calendars aren't touched.
+
+## PC is exact, mobile is a best guess
+
+RuneLite only sees your patches when you're playing on RuneLite. That gives two kinds of
+reminder:
+
+- **Exact.** You planted on PC, RuneLite saw it, and the event is at the real finish time.
+- **Estimated.** Everything after that. Tree Pings can't see mobile runs, so it assumes the
+  simplest thing: **you replanted when it reminded you.** From there it works out the next
+  finish time, and the one after, for up to 5 days: a morning run, plus one more run a day
+  (change this with **Follow-on runs**). Inside the event these are marked "(if replanted)".
+
+The estimate is right when you do your runs around when you're reminded. It drifts when you
+don't:
+
+- **Ran late or early on mobile?** The next reminder is off by about that much.
+- **Skipped a run?** It doesn't know, and keeps reminding you on the old schedule.
+- **Only did some patches?** It can't tell which, so it assumes all of them.
+
+None of this needs fixing by hand. The next time RuneLite sees a patch on PC, its real timer
+replaces the guess. Trees you only plant once (like a spirit tree) are never guessed.
 
 ---
 
@@ -104,9 +124,9 @@ About 2 minutes later your phone shows a Google Calendar notification called
 
 ## Day to day
 
-- **When you log in,** chat tells you what's ready right now and when your next notification is.
+- **When you log in,** chat tells you when your next notification is.
 - **You can close RuneLite any time** after a run. The events are already on your calendar.
-- **Did a run on mobile?** Nothing to do. The daily rhythm already covers it, for days at a time.
+- **Did a run on mobile?** Nothing to do. The estimated rhythm covers it, for days at a time.
 - **Want exact times again after mobile runs?** Walk past any one patch of each kind on PC (the
   Farming Guild has most kinds). If RuneLite sees one tree of a kind freshly planted, every patch
   of that kind it still thinks is "Done" gets the same timer.
@@ -152,6 +172,63 @@ See "Didn't get it?" in setup step 4.
 - If a tree gets diseased while you're away, you still get its notification at the normal time.
 - Use one RuneScape account per calendar. Each account would overwrite the other's events.
 - You can rename the calendar or change its colour. Don't delete it.
+
+---
+
+## FAQ
+
+**Why Google Calendar, and not a phone app or a push service?**
+Almost everyone already has it, it can ring your phone at an exact time with your PC off,
+and events can be moved or removed later when your timers change. It also means there's
+nothing new to install on your phone.
+
+**Why do I have to set up my own Google script?**
+So that nothing sits between you and your calendar. There's no Tree Pings server and no
+account: the plugin talks to a small script in your own Google account, and that script
+writes to your own calendar. Google doesn't allow anyone else to deploy a script for you,
+which is why setup has a Deploy step.
+
+**Google says "this app isn't verified". Is that safe?**
+That warning appears for every personal script, because nobody at Google has reviewed it.
+Here the "app" is your own copy of the script, running in your account. The code is short
+and you can read all of it in `apps-script/Code.gs`.
+
+**How does it know about my mobile runs?**
+It doesn't. It guesses that you replanted when it reminded you. See
+[PC is exact, mobile is a best guess](#pc-is-exact-mobile-is-a-best-guess).
+
+**It said my trees were ready and they weren't. Why?**
+That reminder was an estimate (the event says "(if replanted)") and you planted later than
+it assumed, or skipped a run. Log in on PC and walk past the patch: the real timer takes over.
+
+**Why isn't there a notification for every tree?**
+Because nobody does a run for one tree. Patches that finish close together share one
+notification, so you get about two a day instead of twenty.
+
+**Why don't fruit trees, calquats and hardwoods get their own notifications?**
+They take most of a day, and you'd normally do them on a tree run anyway. So they wait and
+are listed on your next regular-tree notification. If you have no regular trees growing,
+they do get their own.
+
+**Why are the titles just tree names, with no counts?**
+The calendar already shows the time, and after a mobile run RuneLite can't know how many
+patches you actually did. A count would often be wrong. Tap the event for the patch list.
+
+**Why nothing at night?**
+Anything that finishes while you're asleep waits for one notification when you wake up. Set
+your hours with **Awake from / until**, or set both the same to be notified around the clock.
+
+**Why does the calendar update a few minutes after my run, not straight away?**
+So a run in progress isn't sent half-finished. It waits until you've stopped touching
+patches for a few minutes, or sends right away when you log out or close RuneLite.
+
+**Why only trees? What about herbs and allotments?**
+Tree Pings is built for tree runs: long timers, a couple of times a day, worth a reminder.
+Herb runs are short and frequent enough that phone reminders would mostly be noise.
+
+**Does it cost anything?**
+No. Google Apps Script and Google Calendar are free for personal use, and Tree Pings uses
+a tiny fraction of the free limits.
 
 ---
 
