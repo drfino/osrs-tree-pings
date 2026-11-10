@@ -223,8 +223,8 @@ So a run in progress isn't sent half-finished. It waits until you've stopped tou
 patches for a few minutes, or sends right away when you log out or close RuneLite.
 
 **Why only trees? What about herbs and allotments?**
-Tree Pings is built for tree runs: long timers, a couple of times a day, worth a reminder.
-Herb runs are short and frequent enough that phone reminders would mostly be noise.
+No deep reason: I built it for my own tree runs and didn't need the others. Nothing stops
+herbs or allotments from being added later.
 
 **Does it cost anything?**
 No. Google Apps Script and Google Calendar are free for personal use, and Tree Pings uses
