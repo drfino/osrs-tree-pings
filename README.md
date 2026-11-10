@@ -6,11 +6,11 @@ Tree Pings turns your tree timers into **events on your Google Calendar**. Each 
 the moment your trees are ready and has a notification set for that time, so your phone
 shows an ordinary Google Calendar notification, just like a meeting reminder.
 
-- No new app on your phone. It uses the Google Calendar app you probably already have.
+- No new app on your phone. It uses the Google Calendar app.
 - The events go on their own private calendar, **OSRS timers**, separate from your real one.
-- No 3 AM notifications. Anything that finishes overnight waits for one morning event.
-- About 2 events a day, not one per tree.
-- **Exact on PC, a best guess on mobile.** RuneLite can't see what you do on mobile, so
+- No 3 AM notifications. Anything that finishes overnight waits for one morning event (can be changed in settings)
+- About ~2 events a day, trees are batched for efficient runs.
+- **Exact times when on PC, fuzzy matching on mobile runs.** RuneLite can't see what you do on mobile, so
   after a mobile run Tree Pings assumes you replanted when it reminded you and keeps the
   reminders coming. Log in on PC now and then and they snap back to your exact timers.
 
@@ -160,10 +160,10 @@ See "Didn't get it?" in setup step 4.
 ## FAQ
 
 **Why Google Calendar?**
-I built this for myself, and Google Calendar is what I use.
+I built this for myself, and Google Calendar is what I use. I'm not sure if this would work on any other calendar, if Apple calendar has a google scripts equivalent, for example.
 
 **Why do I need my own Google script?**
-The plugin can't write to your calendar directly, so it sends your tree times to a small
+The RL plugin can't write to your calendar directly, so it sends your tree times to a small
 script in your own Google account, and the script updates your calendar. There is no Tree
 Pings server and no account to create.
 
@@ -172,7 +172,7 @@ No. Google shows that warning for any personal script it hasn't reviewed. The sc
 own copy, running in your own account, and you can read all of it in `apps-script/Code.gs`.
 
 **How does it know about runs I do on mobile?**
-It doesn't. RuneLite can't see mobile play, so the plugin assumes you replanted at the time
+It doesn't...RuneLite can't see mobile play, so the plugin assumes you replanted at the time
 of each reminder and schedules the next ones from there. The times are corrected the next
 time RuneLite sees the patch on PC.
 
@@ -181,13 +181,13 @@ That reminder was one of those assumed times (the event says "if replanted"), an
 planted later than it assumed or skipped a run.
 
 **Why don't I get a notification for each tree?**
-Trees that finish within 45 minutes of each other share one notification. Fruit trees,
+Trees that finish within 45 minutes of each other are batched in one cal event. Fruit trees,
 calquats, celastrus and hardwoods don't get their own: they are listed on the next
-regular-tree notification, because that's when I do them.
+regular-tree notification.
 
 **Why do the titles have no patch counts?**
 After a mobile run the plugin doesn't know how many patches you did, so the counts were
-often wrong. The patch list is inside the event.
+often wrong. The patch list is inside the event, but I prefered to see "do your yews" rather than "do your 6x yews", because the first one is usually always right, and the number could often be wrong (even though all your trees are usually done at the same time)
 
 **Why are there no notifications at night?**
 Anything that finishes outside your awake hours waits until the hour you wake up. You can
@@ -202,7 +202,7 @@ Trees are all I wanted reminders for. Herbs and allotments could be added, but I
 needed them.
 
 **Does it cost anything?**
-No. Google Apps Script and Google Calendar are free.
+No! Google Apps Script and Google Calendar are free.
 
 ---
 
