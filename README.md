@@ -185,6 +185,13 @@ Trees that finish within 45 minutes of each other are batched in one cal event. 
 calquats, celastrus and hardwoods don't get their own: they are listed on the next
 regular-tree notification.
 
+**My fruit trees (or calquats, celastrus, hardwoods) finished hours ago and I got no notification. Is it broken?**
+No. Only regular trees (oak, willow, maple, yew, magic) create notifications. Other trees
+that finish within 45 minutes of a regular-tree notification are included in it. Ones that
+finish later than that are listed on your next regular-tree notification, which can be
+several hours later, or the next morning. If you have no regular trees growing, the other
+trees get their own notifications.
+
 **Why do the titles have no patch counts?**
 After a mobile run the plugin doesn't know how many patches you did, so the counts were
 often wrong. The patch list is inside the event, but I prefered to see "do your yews" rather than "do your 6x yews", because the first one is usually always right, and the number could often be wrong (even though all your trees are usually done at the same time)
