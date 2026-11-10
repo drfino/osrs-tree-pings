@@ -159,58 +159,50 @@ See "Didn't get it?" in setup step 4.
 
 ## FAQ
 
-**Why Google Calendar, and not a phone app or a push service?**
-Almost everyone already has it, it can ring your phone at an exact time with your PC off,
-and events can be moved or removed later when your timers change. It also means there's
-nothing new to install on your phone.
+**Why Google Calendar?**
+I built this for myself, and Google Calendar is what I use.
 
-**Why do I have to set up my own Google script?**
-So that nothing sits between you and your calendar. There's no Tree Pings server and no
-account: the plugin talks to a small script in your own Google account, and that script
-writes to your own calendar. Google doesn't allow anyone else to deploy a script for you,
-which is why setup has a Deploy step.
+**Why do I need my own Google script?**
+The plugin can't write to your calendar directly, so it sends your tree times to a small
+script in your own Google account, and the script updates your calendar. There is no Tree
+Pings server and no account to create.
 
-**Google says "this app isn't verified". Is that safe?**
-That warning appears for every personal script, because nobody at Google has reviewed it.
-Here the "app" is your own copy of the script, running in your account. The code is short
-and you can read all of it in `apps-script/Code.gs`.
+**Google says "this app isn't verified". Is that a problem?**
+No. Google shows that warning for any personal script it hasn't reviewed. The script is your
+own copy, running in your own account, and you can read all of it in `apps-script/Code.gs`.
 
-**How does it know about my mobile runs?**
-It doesn't. It guesses that you replanted when it reminded you, and corrects itself the
-next time RuneLite sees the patch on PC.
+**How does it know about runs I do on mobile?**
+It doesn't. RuneLite can't see mobile play, so the plugin assumes you replanted at the time
+of each reminder and schedules the next ones from there. The times are corrected the next
+time RuneLite sees the patch on PC.
 
-**It said my trees were ready and they weren't. Why?**
-That reminder was an estimate (the event says "(if replanted)") and you planted later than
-it assumed, or skipped a run. Log in on PC and walk past the patch: the real timer takes over.
+**A reminder said my trees were ready and they weren't. Why?**
+That reminder was one of those assumed times (the event says "if replanted"), and you
+planted later than it assumed or skipped a run.
 
-**Why isn't there a notification for every tree?**
-Because nobody does a run for one tree. Patches that finish close together share one
-notification, so you get about two a day instead of twenty.
+**Why don't I get a notification for each tree?**
+Trees that finish within 45 minutes of each other share one notification. Fruit trees,
+calquats, celastrus and hardwoods don't get their own: they are listed on the next
+regular-tree notification, because that's when I do them.
 
-**Why don't fruit trees, calquats and hardwoods get their own notifications?**
-They take most of a day, and you'd normally do them on a tree run anyway. So they wait and
-are listed on your next regular-tree notification. If you have no regular trees growing,
-they do get their own.
+**Why do the titles have no patch counts?**
+After a mobile run the plugin doesn't know how many patches you did, so the counts were
+often wrong. The patch list is inside the event.
 
-**Why are the titles just tree names, with no counts?**
-The calendar already shows the time, and after a mobile run RuneLite can't know how many
-patches you actually did. A count would often be wrong. Tap the event for the patch list.
+**Why are there no notifications at night?**
+Anything that finishes outside your awake hours waits until the hour you wake up. You can
+change the hours in the settings, or set both to the same hour to turn this off.
 
-**Why nothing at night?**
-Anything that finishes while you're asleep waits for one notification when you wake up. Set
-your hours with **Awake from / until**, or set both the same to be notified around the clock.
+**Why does the calendar update a few minutes after my run?**
+The plugin waits until you haven't changed a patch for 5 minutes, so it doesn't send a run
+that's still in progress. Logging out or closing RuneLite sends it immediately.
 
-**Why does the calendar update a few minutes after my run, not straight away?**
-So a run in progress isn't sent half-finished. It waits until you've stopped touching
-patches for a few minutes, or sends right away when you log out or close RuneLite.
-
-**Why only trees? What about herbs and allotments?**
-No deep reason: I built it for my own tree runs and didn't need the others. Nothing stops
-herbs or allotments from being added later.
+**Why only trees?**
+Trees are all I wanted reminders for. Herbs and allotments could be added, but I haven't
+needed them.
 
 **Does it cost anything?**
-No. Google Apps Script and Google Calendar are free for personal use, and Tree Pings uses
-a tiny fraction of the free limits.
+No. Google Apps Script and Google Calendar are free.
 
 ---
 
