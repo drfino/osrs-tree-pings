@@ -192,6 +192,9 @@ trees get their own notifications.
 Trees that finish within 45 minutes of each other are batched in one cal event. Fruit trees,
 calquats, celastrus and hardwoods don't get their own: they are listed on the next
 regular-tree notification.
+If you plant different regular trees, for example oaks in some patches and willows in
+others, they finish at different times and get separate notifications. To combine them,
+raise **Group window** in the Advanced settings, for example to 90 minutes.
 
 **Why are there no notifications at night?**
 Anything that finishes outside your awake hours waits until the hour you wake up. You can
