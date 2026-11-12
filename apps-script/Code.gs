@@ -5,7 +5,8 @@
  * dedicated, private "OSRS timers" calendar in sync. Google then delivers the
  * notifications to your phone, even when your PC is off.
  *
- * Setup (the README has pictures-free step by step):
+ * Setup: follow the steps at https://github.com/drfino/osrs-tree-pings#setup-about-3-minutes-once
+ * In short:
  *   1. Deploy -> New deployment -> Web app
  *        Execute as: Me      Who has access: Anyone
  *      Approve the Calendar permission when asked, and copy the Web app URL.
