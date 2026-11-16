@@ -124,6 +124,13 @@ public final class FarmingPredictor
 
 		int stage = state.getStage();
 		int stages = state.getStages();
+		// The last growing stage is a fully grown tree waiting for its health check. Seeing one
+		// tells us nothing about when it finished (RuneLite stamps it with the time you walked
+		// past), and it proves it wasn't replanted, so it's done, not growing.
+		if (stage >= stages - 1)
+		{
+			return null;
+		}
 		long tickTime = getTickTime(config, tickrate, 0, unixTime);
 		long doneEstimate = getTickTime(config, tickrate, stages - 1 - stage, tickTime);
 
