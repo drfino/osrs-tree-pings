@@ -180,8 +180,8 @@ See the setup section, under "Chat said connected but no notification arrived".
 
 ## FAQ
 
-**Why do I need my own Google script?**
-The RL plugin can't write to your calendar directly, so it sends your tree times to a small
+Q: **Why do I need my own Google script?**
+A: The RL plugin can't write to your calendar directly, so it sends your tree times to a small
 script in your own Google account, and the script updates your calendar. There is no Tree
 Pings server and no account to create.
 
