@@ -190,14 +190,14 @@ A: No. Google shows that warning for any personal script it hasn't reviewed. The
 own copy, running in your own account, and you can read all of it in `apps-script/Code.gs`.
 
 **Q: Does it cost anything?**\
-A: No! Google Apps Script and Google Calendar are free.
+A: Heck no! Google Apps Script and Google Calendar are free.
 
 **Q: Why Google Calendar?**\
-A: I built this for myself, and Google Calendar is what I use. I'm not sure if this would work on any other calendar, if Apple calendar has a google scripts equivalent, for example.
+A: I built this for myself and I use Google Calendar. I'm not sure if this would work on any other calendar, if Apple calendar has a google scripts equivalent, for example.
 
 **Q: How does it know about runs I do on mobile?**\
-A: It doesn't...RuneLite can't see mobile play, so the plugin assumes you replanted at the time
-of each reminder and schedules the next ones from there. The times are corrected the next
+A: It doesn't...RuneLite can't log data from mobile, so the plugin assumes you replanted at the time
+of each reminder and schedules estimate events from there. The times are corrected the next
 time RuneLite sees the patch on PC.
 
 **Q: A reminder said my trees were ready and they weren't. Why?**\
@@ -205,7 +205,7 @@ A: That reminder was one of those assumed times (the event says "if replanted"),
 planted later than it assumed or skipped a run.
 
 **Q: My fruit trees (or calquats, celastrus, hardwoods) finished hours ago and I got no notification. Is it broken?**\
-A: No. Only regular trees (oak, willow, maple, yew, magic) create notifications. Other trees
+A: Probably not. If you are planting all types of trees, only regular trees (oak, willow, maple, yew, magic) create notifications because they are the most frequent. Other trees
 that finish within 45 minutes of a regular-tree notification are included in it. Ones that
 finish later than that are listed on your next regular-tree notification, which can be
 several hours later, or the next morning. If you have no regular trees growing, the other
@@ -233,7 +233,7 @@ often wrong. The patch list is inside the event, but I preferred to see "do your
 
 **Q: Why only trees?**\
 A: Trees are all I wanted reminders for. Herbs and allotments could be added, but I haven't
-needed them.
+needed them and herbs are so fast the calendar would be pretty cluttered. 2 events a day for massive farming XP is a pretty good cadence for me.
 
 ---
 
