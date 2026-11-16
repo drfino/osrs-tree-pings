@@ -58,7 +58,7 @@ event at the time shown, and its notification uses the event title:
 
 ---
 
-## Setup (about 3 minutes, once)
+## Setup (~3 min)
 
 **Before you start, you need:**
 - Tree Pings installed from RuneLite's Plugin Hub.
