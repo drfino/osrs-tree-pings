@@ -577,9 +577,9 @@ public class TreePingsPlugin extends Plugin
 			return null;
 		}
 		HttpUrl url = HttpUrl.parse(raw);
-		if (url == null || !"https".equals(url.scheme()) || !url.host().endsWith("google.com"))
+		if (url == null || !"https".equals(url.scheme()) || !"script.google.com".equals(url.host()))
 		{
-			log.debug("Tree Pings: ignoring script URL that isn't an https Google URL: {}", raw);
+			log.debug("Tree Pings: ignoring script URL that isn't a Google Apps Script web app: {}", raw);
 			return null;
 		}
 		return url;
